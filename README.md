@@ -1,1 +1,1 @@
-# azure-resource-explorer-vscode
+# Azure Resource Explorer as VsCode extension
