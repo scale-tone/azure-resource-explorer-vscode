@@ -1,10 +1,7 @@
 import * as vscode from 'vscode';
 import { AzureAccountWrapper } from './AzureAccountWrapper';
-import axios from 'axios';
-import { READONLY_JSON_SCHEME } from './ArmDocumentProvider';
 import { ResourceTypesRepository } from './ResourceTypesRepository';
 import { ArmFsProvider } from './ArmFsProvider';
-import path = require('path');
 
 export enum ResourceExplorerNodeTypeEnum {
     Providers = 1,
@@ -12,8 +9,6 @@ export enum ResourceExplorerNodeTypeEnum {
     ProviderNamespace,
     ProviderResourceType,
     Subscription,
-    SubscriptionProviders,
-    SubscriptionResourceGroups,
     ResourceGroup,
     ResourceGroupResourceType,
     ResourceGroupResource
@@ -110,29 +105,9 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
 
                 case ResourceExplorerNodeTypeEnum.Subscription: {
 
-                    result.push({
-                        nodeType: ResourceExplorerNodeTypeEnum.SubscriptionProviders,
-                        nodeId: parent.nodeId,
-                        label: 'Providers',
-                        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-                    });
+                    const resourceGroups = await this._account.query(`/subscriptions/${parent.nodeId}/resourcegroups`);
 
-                    result.push({
-                        nodeType: ResourceExplorerNodeTypeEnum.SubscriptionResourceGroups,
-                        nodeId: parent.nodeId,
-                        label: 'ResourceGroups',
-                        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-                    });
-
-                    break;
-                }
-
-                case ResourceExplorerNodeTypeEnum.SubscriptionResourceGroups: {
-
-                    const uri = `https://management.azure.com/subscriptions/${parent.nodeId}/resourcegroups?api-version=2020-06-01`;
-                    const response = await axios.get(uri, { headers: { 'Authorization': `Bearer ${await this._account.getToken()}` } });
-
-                    for (const resGroup of (response.data?.value ?? [])) {
+                    for (const resGroup of (resourceGroups ?? [])) {
 
                         const node = {
                             nodeType: ResourceExplorerNodeTypeEnum.ResourceGroup,
@@ -151,11 +126,10 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
 
                 case ResourceExplorerNodeTypeEnum.ResourceGroup: {
 
-                    const uri = `https://management.azure.com${parent.nodeId}/resources?api-version=2014-04-01-preview`;
-                    const response = await axios.get(uri, { headers: { 'Authorization': `Bearer ${await this._account.getToken()}` } });
-
+                    const resources = await this._account.query(`${parent.nodeId}/resources`);
+                    
                     const resourcesByTypes = {} as any;
-                    for (const res of (response.data?.value ?? [])) {
+                    for (const res of (resources ?? [])) {
 
                         resourcesByTypes[res.type] ??= [];
                         resourcesByTypes[res.type].push(res);

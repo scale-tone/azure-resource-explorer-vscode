@@ -11,10 +11,10 @@ export class ResourceTypesRepository {
 
         if (!this._map) {
 
-            const response = await axios.get(`https://management.azure.com/providers?api-version=2023-07-01`, { headers: { 'Authorization': `Bearer ${await this._account.getToken()}` } });
+            const providers = await this._account.query('/providers');
 
             const map = {} as any;
-            for (const ns of (response.data?.value ?? [])) {
+            for (const ns of (providers ?? [])) {
     
                 map[ns.namespace.toLowerCase()] = ns.resourceTypes;
             }

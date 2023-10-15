@@ -32,9 +32,8 @@ export function activate(context: vscode.ExtensionContext) {
 
             () => todo().catch(err => {
 
-                const msg = `${errorMessage}. ${err.message ?? err}`;
-                log(msg, true, true);
-                vscode.window.showErrorMessage(msg);
+                vscode.window.showErrorMessage(`${errorMessage}. ${err.message ?? err}`);
+                log(`${errorMessage}. ${err.message ?? err} ${JSON.stringify(err.response?.data)}`, true, true);
             }
         ));
 

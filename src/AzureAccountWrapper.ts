@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 
 import { TokenCredential, GetTokenOptions } from "@azure/core-auth";
+import axios, { AxiosResponse } from 'axios';
 
 // Full typings for this can be found here: https://github.com/microsoft/vscode-azure-account/blob/master/src/azure-account.api.d.ts
 export type AzureSubscription = { session: { credentials2: any }, subscription: { subscriptionId: string, displayName: string } };
@@ -145,6 +146,83 @@ export class AzureAccountWrapper {
         return !!this._account && !!(await this._account.waitForFilters()) && (this._account.filters.length > 0);
     }
 
+    async query(path: string, apiVersion: string = '2023-07-01'): Promise<any> {
+
+        let uri = `https://management.azure.com${path}?api-version=${apiVersion}`;
+
+        let result: any = undefined;
+        while (true) {
+
+            let response;
+
+            try {
+
+                response = await axios.get(uri, { headers: { 'Authorization': `Bearer ${await this.getToken()}` } });
+                
+            } catch (err: any) {
+
+                // If this was a nextLink, then just rethrowing
+                if (!!result) {
+                    throw err;
+                }
+                
+                // Trying to use another api-version, but only if this is the first request
+                const newApiVersion = this.tryToGetSupportedApiVersion(err.response);
+                if (!newApiVersion) {
+                    throw err;
+                }
+
+                uri = `https://management.azure.com${path}?api-version=${newApiVersion}`;
+                response = await axios.get(uri, { headers: { 'Authorization': `Bearer ${await this.getToken()}` } });
+            }
+
+            if (!!result) {
+                
+                // Expecting result to be an array in this case
+                result.push(...response.data?.value);
+
+            } else {
+
+                result = response.data?.value ?? response.data;
+            }
+
+            uri = response.data?.nextLink;
+            if (!uri) {
+                break;
+            }
+        }
+
+        return result;
+    }
+
+    async apply(method: string, resourceId: string, data: any, apiVersion: string): Promise<AxiosResponse>{
+
+        try {
+         
+            return await axios({
+                method,
+                url: `https://management.azure.com${resourceId}?api-version=${apiVersion}`,
+                data,
+                headers: { 'Authorization': `Bearer ${await this._account.getToken()}` }
+            });
+                
+        } catch (err: any) {
+
+            // Trying to use another api-version, but only if this is the first request
+            const newApiVersion = this.tryToGetSupportedApiVersion(err.response);
+            if (!newApiVersion) {
+                throw err;
+            }
+
+            return await axios({
+                method,
+                url: `https://management.azure.com${resourceId}?api-version=${apiVersion}`,
+                data,
+                headers: { 'Authorization': `Bearer ${await this._account.getToken()}` }
+            });
+        }
+    }
+
     private readonly _account: any;
 
     private async getAuthSession(providerId: string, scopes: string[]): Promise<vscode.AuthenticationSession> {
@@ -161,5 +239,24 @@ export class AzureAccountWrapper {
         authSession = await vscode.authentication.getSession(providerId, scopes, { createIfNone: true });
     
         return authSession;        
+    }
+
+    private tryToGetSupportedApiVersion(response: AxiosResponse): string | undefined {
+
+        if (response?.status !== 400 || response?.data?.error?.code !== 'NoRegisteredProviderFound') {
+            return;
+        }
+
+        const supportedVersionsMatch = /The supported api-versions are '([^']+)'/i.exec(response?.data?.error?.message);
+        if (!supportedVersionsMatch) {
+            return;
+        }
+
+        const supportedVersions = supportedVersionsMatch[1].split(',');
+        if (!supportedVersions.length) {
+            return;
+        }
+
+        return supportedVersions[supportedVersions.length - 1].trim();
     }
 }

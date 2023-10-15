@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { AzureAccountWrapper } from './AzureAccountWrapper';
 import { ResourceTypesRepository } from './ResourceTypesRepository';
-import axios from 'axios';
 
 export const ARM_SCHEME = 'azure-resource-explorer-vscode-arm-template';
 
@@ -23,11 +22,8 @@ export class ArmFsProvider implements vscode.FileSystemProvider {
         await vscode.window.withProgress(progressOptions, async (progress, token) => {
 
             const apiVersion = await this._resourceTypeRepository.getApiVersion(resourceId);
-
-            const getUri = `https://management.azure.com${encodeURI(resourceId)}?api-version=${apiVersion}`;
-            const response = await axios.get(getUri, { headers: { 'Authorization': `Bearer ${await this._account.getToken()}` } });
-    
-            const json = JSON.stringify(response.data, undefined, 3);
+            const data = await this._account.query(encodeURI(resourceId), apiVersion);
+            const json = JSON.stringify(data, undefined, 3);
     
             const fileUri = `${ARM_SCHEME}:${resourceId}.json`;
             this._files[fileUri] = {
@@ -93,16 +89,8 @@ export class ArmFsProvider implements vscode.FileSystemProvider {
 
         return await vscode.window.withProgress(progressOptions, async (progress, token) => {
 
-            const response = await axios({
-                method,
-                url: `https://management.azure.com${encodeURI(resourceId!)}?api-version=${apiVersion}`,
-                data: json,
-                headers: { 'Authorization': `Bearer ${await this._account.getToken()}` }
-            });
-    
-            vscode.window.showInformationMessage(`${method} ${resourceId} returned ${response.status}`);
+            return await this._account.apply(method, encodeURI(resourceId!), json, apiVersion);
 
-            return response.data;
         });
     }
 
