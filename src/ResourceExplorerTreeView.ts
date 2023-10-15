@@ -21,13 +21,18 @@ export type ResourceExplorerTreeItem = vscode.TreeItem & {
     resources?: any[]
 };
 
-
 // Resource Explorer as a TreeView
 export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.TreeItem> {
 
     constructor(private _account: AzureAccountWrapper, private _resourceTypeRepository: ResourceTypesRepository, private _fsProvider: ArmFsProvider, private _resourcesFolder: string) {}
 
-    onDidChangeTreeData?: vscode.Event<void | vscode.TreeItem | vscode.TreeItem[] | null | undefined> | undefined;
+    protected _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined> = new vscode.EventEmitter<vscode.TreeItem | undefined>();
+    readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined> = this._onDidChangeTreeData.event;
+
+    refresh(): void {
+        this._resourceTypeRepository.cleanup();
+        this._onDidChangeTreeData.fire(undefined);
+    }
 
     // Does nothing, actually
     getTreeItem(element: vscode.TreeItem): vscode.TreeItem { return element; }

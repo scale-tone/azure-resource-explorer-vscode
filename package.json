@@ -30,6 +30,14 @@
       {
         "command": "azure-resource-explorer-for-vscode.view-context.applyCurrentJson",
         "title": "Apply JSON from current file to this resource..."
+      },
+      {
+        "command": "azure-resource-explorer-for-vscode.view-context.refresh",
+        "title": "Refresh",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
       }
     ],
     "menus": {
@@ -45,6 +53,13 @@
           "group": "azure-resource-explorer-for-vscode.view-context-group@2"
         }
       ],
+      "view/title": [
+        {
+          "command": "azure-resource-explorer-for-vscode.view-context.refresh",
+          "when": "view == azure-resource-explorer-for-vscode-tree-view",
+          "group": "navigation"
+        }
+      ],
       "commandPalette": [
         {
           "command": "azure-resource-explorer-for-vscode.view-context.showAsArm",
@@ -52,6 +67,10 @@
         },
         {
           "command": "azure-resource-explorer-for-vscode.view-context.applyCurrentJson",
+          "when": "never"
+        },
+        {
+          "command": "azure-resource-explorer-for-vscode.view-context.refresh",
           "when": "never"
         }
       ]
@@ -86,5 +105,8 @@
   },
   "dependencies": {
     "axios": "^1.5.1"
-  }
+  },
+  "extensionDependencies": [
+    "ms-vscode.azure-account"
+  ]
 }

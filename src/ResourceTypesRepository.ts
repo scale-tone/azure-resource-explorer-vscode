@@ -1,4 +1,3 @@
-import axios from "axios";
 import { AzureAccountWrapper } from "./AzureAccountWrapper";
 
 export type ProvidersMap = { [namespace: string]: { resourceType: string, locations: string[], apiVersions: string[], defaultApiVersion?: string, capabilities: string }[] };
@@ -6,6 +5,10 @@ export type ProvidersMap = { [namespace: string]: { resourceType: string, locati
 export class ResourceTypesRepository {
 
     constructor(private _account: AzureAccountWrapper) { }
+
+    cleanup() {
+        this._map = undefined;
+    }
     
     async getProviderMap(): Promise<ProvidersMap> {
 
