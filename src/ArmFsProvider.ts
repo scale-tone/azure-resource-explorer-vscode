@@ -6,6 +6,7 @@ export const ARM_SCHEME = 'azure-resource-explorer-vscode-arm-template';
 
 type ArmFileType = { resourceId: string, bytes: Uint8Array, ctime: number, mtime: number };
 
+// Treats ARM resources as files
 export class ArmFsProvider implements vscode.FileSystemProvider {
 
     constructor(private _account: AzureAccountWrapper, private _resourceTypeRepository: ResourceTypesRepository) {}

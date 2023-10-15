@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { ResourceExplorerTreeView } from './ResourceExplorerTreeView';
-import { READONLY_JSON_SCHEME, ArmDocumentProvider } from './ArmDocumentProvider';
 import { AzureAccountWrapper } from './AzureAccountWrapper';
 import { ResourceTypesRepository } from './ResourceTypesRepository';
 import { ARM_SCHEME, ArmFsProvider } from './ArmFsProvider';
@@ -51,8 +50,6 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(
 
 		logChannel,
-
-//		vscode.workspace.registerTextDocumentContentProvider(ARM_SCHEME, new ArmDocumentProvider(azureAccount, resourceTypeRepository)),
 
         vscode.workspace.registerFileSystemProvider(ARM_SCHEME, fsProvider),
         

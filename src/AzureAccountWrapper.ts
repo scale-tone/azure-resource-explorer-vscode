@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 
-import { TokenCredential, GetTokenOptions } from "@azure/core-auth";
 import axios, { AxiosResponse } from 'axios';
 
 // Full typings for this can be found here: https://github.com/microsoft/vscode-azure-account/blob/master/src/azure-account.api.d.ts
@@ -34,44 +33,6 @@ export class AzureAccountWrapper {
 
     get azureAccount(): any { return this._account; }
 
-    async pickUpSubscription(): Promise<AzureSubscription | undefined> {
-        
-        // Picking up a subscription
-        const subscriptions = await this.getSubscriptions();
-
-        if (subscriptions.length <= 0) {
-            throw new Error(`Select at least one subscription in the Azure Account extension`);
-        }
-        
-        var subscription: AzureSubscription;
-
-        if (subscriptions.length > 1) {
-
-            const pickResult = await vscode.window.showQuickPick(
-                subscriptions.map(s => {
-                    return {
-                        subscription: s,
-                        label: s.subscription.displayName,
-                        description: s.subscription.subscriptionId
-                    };
-                }),
-                { title: 'Select Azure Subscription' }
-            );
-
-            if (!pickResult) {
-                return;
-            }
-                
-            subscription = pickResult.subscription;
-
-        } else {
-
-            subscription = subscriptions[0];
-        }
-
-        return subscription;
-    }
-
     async getSubscriptions(): Promise<AzureSubscription[]> {
 
         if (!(await this.isSignedIn())) {
@@ -87,35 +48,6 @@ export class AzureAccountWrapper {
         const authSession = await this.getAuthSession('microsoft', scopes);
         
         return authSession.accessToken;
-    }
-
-    // Uses vscode.authentication to get a TokenCredential object for custom scopes
-    async getTokenCredential(scopes: string[] = ['https://management.core.windows.net/user_impersonation']): Promise<TokenCredential> {
-
-        const accessToken = await this.getToken(scopes);
-
-        // Need to extract expiration time from token
-        let expiresOnTimestamp = new Date().getTime() + 60 * 1000;
-
-        const tokenJson = Buffer.from(accessToken, 'base64').toString();
-
-        const match = /"exp"\s*:\s*(\d+)/i.exec(tokenJson);
-        if (!!match) {
-
-            const exp = match[1];
-            expiresOnTimestamp = parseInt(exp) * 1000;
-        }
-
-        return {
-
-            getToken: async (scopes: string | string[], options?: GetTokenOptions) => {
-
-                return {
-                    token: accessToken,
-                    expiresOnTimestamp
-                };
-            }
-        };
     }
 
     async isSignedIn(): Promise<boolean> {
