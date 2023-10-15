@@ -79,29 +79,6 @@ export class AzureAccountWrapper {
         return this._account.filters;
     }
 
-    async getTokenViaAzureAccount(tokenCredential: any): Promise<string> {
-
-        const scope = 'https://management.core.windows.net/';
-
-        let token = '';
-
-        if (!tokenCredential.environment && !tokenCredential.clientId && !tokenCredential.username) {
-
-            // It looks like MSAL is being used
-
-            token = (await tokenCredential.getToken(scope)).token;
-
-        } else {
-
-            // It looks like ADAL is being used
-
-            token = (await tokenCredential.getToken()).accessToken;
-        }
-
-        return token;
-    }
-
-
     // Uses vscode.authentication to get a token with custom scopes
     async getToken(scopes: string[] = ['https://management.core.windows.net/user_impersonation']): Promise<string> {
 

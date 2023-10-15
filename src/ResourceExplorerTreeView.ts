@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import { openUrl } from '@microsoft/vscode-azext-utils';
+
 import { ARM_URL, AzureAccountWrapper, DEFAULT_API_VERSION } from './AzureAccountWrapper';
 import { ResourceTypesRepository } from './ResourceTypesRepository';
 import { ArmFsProvider } from './ArmFsProvider';
@@ -11,7 +13,7 @@ export enum ResourceExplorerNodeTypeEnum {
     Subscription,
     ResourceGroup,
     ResourceGroupResourceType,
-    ResourceGroupResource
+    Resource
 }
 
 export type ResourceExplorerTreeItem = vscode.TreeItem & {
@@ -19,6 +21,8 @@ export type ResourceExplorerTreeItem = vscode.TreeItem & {
     nodeType: ResourceExplorerNodeTypeEnum,
     url: string,
     nodeId?: string,
+    portalUrl?: string,
+    tenantId?: string,
     resources?: any[]
 };
 
@@ -51,6 +55,28 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
         vscode.env.clipboard.writeText(node.url);
 
         vscode.window.showInformationMessage(`Resource URL was copied to Clipboard`);
+    }
+
+    async copyResourceId(node: ResourceExplorerTreeItem): Promise<void>{
+
+        if (!node?.nodeId) {
+            throw new Error(`ResourceId is empty`);
+        }
+
+        vscode.env.clipboard.writeText(node.nodeId);
+
+        vscode.window.showInformationMessage(`ResourceId was copied to Clipboard`);
+    }
+
+    async openInPortal(node: ResourceExplorerTreeItem): Promise<void>{
+
+        if (!node?.portalUrl || !node?.tenantId || !node?.nodeId) {
+            throw new Error(`Invalid resource`);
+        }
+
+        const portalUrl = `${node.portalUrl}/#@${node.tenantId}/resource${node.nodeId}`;
+
+        await openUrl(portalUrl);
     }
 
     // Does nothing, actually
@@ -126,6 +152,8 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
                             nodeId: subscription.subscription.subscriptionId,
                             label: subscription.subscription.displayName,
                             url: `${ARM_URL}/subscriptions/${subscription.subscription.subscriptionId}?api-version=${DEFAULT_API_VERSION}`,
+                            portalUrl: (subscription.session as any).environment?.portalUrl,
+                            tenantId: (subscription.session as any).tenantId,
                             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                         });
                     }
@@ -144,6 +172,8 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
                             nodeId: resGroup.id,
                             label: resGroup.name,
                             url: `${ARM_URL}${resGroup.id}?api-version=${DEFAULT_API_VERSION}`,
+                            portalUrl: parent.portalUrl,
+                            tenantId: parent.tenantId,
                             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                         };
 
@@ -177,6 +207,8 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
                             nodeId: parent.nodeId,
                             label: `${resType} (${resources.length})`,
                             url: `${ARM_URL}${parent.nodeId}/providers/${resType}?api-version=${apiVersion}`,
+                            portalUrl: parent.portalUrl,
+                            tenantId: parent.tenantId,
                             resources,
                             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
                         });
@@ -192,13 +224,15 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
                         const apiVersion = await this._resourceTypeRepository.getApiVersion(res.id);
 
                         const node: ResourceExplorerTreeItem = {
-                            nodeType: ResourceExplorerNodeTypeEnum.ResourceGroupResource,
-                            contextValue: `${ResourceExplorerNodeTypeEnum[ResourceExplorerNodeTypeEnum.ResourceGroupResource]}`,
+                            nodeType: ResourceExplorerNodeTypeEnum.Resource,
+                            contextValue: `${ResourceExplorerNodeTypeEnum[ResourceExplorerNodeTypeEnum.Resource]}`,
                             nodeId: res.id,
                             label: res.name,
                             description: res.location,
                             tooltip: res.kind,
                             url: `${ARM_URL}${encodeURI(res.id)}?api-version=${apiVersion}`,
+                            portalUrl: parent.portalUrl,
+                            tenantId: parent.tenantId,
                             collapsibleState: vscode.TreeItemCollapsibleState.None
                         };
 
