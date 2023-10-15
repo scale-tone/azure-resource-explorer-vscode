@@ -9,11 +9,13 @@ type ArmFileType = { resourceId: string, bytes: Uint8Array, ctime: number, mtime
 // Treats ARM resources as files
 export class ArmFsProvider implements vscode.FileSystemProvider {
 
-    constructor(private _account: AzureAccountWrapper, private _resourceTypeRepository: ResourceTypesRepository) {}
-
-    private readonly _files: { [uri: string]: ArmFileType } = {};
+    constructor(private _account: AzureAccountWrapper, private _resourceTypeRepository: ResourceTypesRepository) {
+    }
 
     async show(resourceId: string): Promise<void> {
+
+        // No deterministic way to detect a text document being closed, so instead we just do a periodic cleanup
+        this.cleanup();
 
         const progressOptions = {
             location: vscode.ProgressLocation.Notification,
@@ -25,7 +27,7 @@ export class ArmFsProvider implements vscode.FileSystemProvider {
             const apiVersion = await this._resourceTypeRepository.getApiVersion(resourceId);
             const data = await this._account.query(encodeURI(resourceId), apiVersion);
             const json = JSON.stringify(data, undefined, 3);
-    
+
             const fileUri = `${ARM_SCHEME}:${resourceId}.json`;
             this._files[fileUri] = {
                 resourceId,
@@ -33,12 +35,12 @@ export class ArmFsProvider implements vscode.FileSystemProvider {
                 ctime: Date.now(),
                 mtime: Date.now()
             };
-    
+
             const doc = await vscode.workspace.openTextDocument(vscode.Uri.parse(fileUri));
             await vscode.window.showTextDocument(doc, { preview: false });
-    
+
             // To make sure the editor gets updated
-            this._emitter.fire([{ type: vscode.FileChangeType.Changed, uri: vscode.Uri.parse(fileUri) }]);    
+            this._emitter.fire([{ type: vscode.FileChangeType.Changed, uri: vscode.Uri.parse(fileUri) }]);
         });
     }
 
@@ -73,7 +75,7 @@ export class ArmFsProvider implements vscode.FileSystemProvider {
 
         const apiVersion = await this._resourceTypeRepository.getApiVersion(resourceId!);
 
-        resourceId = await vscode.window.showInputBox({ value: resourceId, title: 'Check/modify the path to apply changes to'});
+        resourceId = await vscode.window.showInputBox({ value: resourceId, title: 'Check/modify the path to apply changes to' });
         if (!resourceId) {
             return;
         }
@@ -110,13 +112,13 @@ export class ArmFsProvider implements vscode.FileSystemProvider {
         const result = await this.applyJson(file.resourceId, json);
 
         if (!result) {
-            
+
             throw new Error(`Cancelled applying changes`);
         }
 
         file.bytes = Buffer.from(JSON.stringify(result, undefined, 3));
         file.mtime = Date.now();
-        this._emitter.fire([{ type: vscode.FileChangeType.Changed, uri }]);    
+        this._emitter.fire([{ type: vscode.FileChangeType.Changed, uri }]);
     }
 
     watch(uri: vscode.Uri, options: { readonly recursive: boolean; readonly excludes: readonly string[]; }): vscode.Disposable {
@@ -136,8 +138,24 @@ export class ArmFsProvider implements vscode.FileSystemProvider {
     }
     copy?(source: vscode.Uri, destination: vscode.Uri, options: { readonly overwrite: boolean; }): void | Thenable<void> {
         throw new Error('Method not implemented.');
-    } 
-    
-	private _emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
-	onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
+    }
+
+    private readonly _files: { [uri: string]: ArmFileType } = {};
+
+    private _emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
+    onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
+
+    private cleanup() {
+
+        const visibleUris = vscode.workspace.textDocuments.map(d => d.uri.toString().toLowerCase());
+
+        const uris = Object.keys(this._files);
+
+        for (const uri of uris) {
+
+            if (!visibleUris.includes(uri.toLowerCase())) {
+                delete this._files[uri];
+            }
+        }
+    }
 }

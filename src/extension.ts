@@ -49,8 +49,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(
 
-		logChannel,
-
+        logChannel,
+        
         vscode.workspace.registerFileSystemProvider(ARM_SCHEME, fsProvider),
         
         vscode.window.registerTreeDataProvider('azure-resource-explorer-for-vscode-tree-view', treeView),
