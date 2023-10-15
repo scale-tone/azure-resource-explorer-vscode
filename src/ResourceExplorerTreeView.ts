@@ -114,15 +114,19 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
                     const providerMap = await this._resourceTypeRepository.getProviderMap();
 
                     for (const ns in providerMap) {
-                        
-                        result.push({
+
+                        const node = {
                             nodeType: ResourceExplorerNodeTypeEnum.ProviderNamespace,
                             label: ns,
                             nodeId: ns,
                             url: `${ARM_URL}/providers/${ns}?api-version=${DEFAULT_API_VERSION}`,
                             resources: providerMap[ns],
                             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-                        });
+                        };
+
+                        // Sorting by name on the fly
+                        const index = result.findIndex(n => n.label! > node.label);
+                        result.splice(index < 0 ? result.length : index, 0, node);
                     }
 
                     break;
@@ -131,18 +135,58 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
                 case ResourceExplorerNodeTypeEnum.ProviderNamespace: {
 
                     for (const resourceType of parent.resources ?? []) {
-                        
-                        result.push({
+
+                        const node = {
                             nodeType: ResourceExplorerNodeTypeEnum.ProviderResourceType,
                             label: resourceType.resourceType,
-                            url: `${ARM_URL}/providers/${parent.nodeId}/${resourceType.resourceType}?api-version=${DEFAULT_API_VERSION}`,
-                            collapsibleState: vscode.TreeItemCollapsibleState.None,
-                        });
+                            nodeId: `${parent.nodeId}/${resourceType.resourceType}`,
+                            url: `${ARM_URL}/providers/${parent.nodeId}?api-version=${DEFAULT_API_VERSION}`,
+                            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                        };
+
+                        // Sorting by name on the fly
+                        const index = result.findIndex(n => n.label! > node.label);
+                        result.splice(index < 0 ? result.length : index, 0, node);
                     }
 
                     break;
                 }
 
+                case ResourceExplorerNodeTypeEnum.ProviderResourceType: {
+
+                    const resources = await this._account.queryGraph(parent.nodeId!);
+
+                    for (const res of resources) {
+                        
+                        const apiVersion = await this._resourceTypeRepository.getApiVersion(res.id);
+
+                        const node: ResourceExplorerTreeItem = {
+                            nodeType: ResourceExplorerNodeTypeEnum.Resource,
+                            contextValue: `${ResourceExplorerNodeTypeEnum[ResourceExplorerNodeTypeEnum.Resource]}`,
+                            nodeId: res.id,
+                            label: res.name,
+                            description: res.location,
+                            tooltip: res.kind,
+                            url: `${ARM_URL}${encodeURI(res.id)}?api-version=${apiVersion}`,
+                            portalUrl: 'https://portal.azure.com',
+                            tenantId: res.tenantId,
+                            collapsibleState: vscode.TreeItemCollapsibleState.None
+                        };
+
+                        node.command = {
+                            title: 'Show as ARM template',
+                            command: 'azure-resource-explorer-for-vscode.view-context.showAsArm',
+                            arguments: [node]
+                        };
+
+                        // Sorting by name on the fly
+                        const index = result.findIndex(n => n.label! > node.label!);
+                        result.splice(index < 0 ? result.length : index, 0, node);
+                    }
+
+                    break;
+                }
+                    
                 case ResourceExplorerNodeTypeEnum.Subscriptions: {
 
                     for (const subscription of await this._account.getSubscriptions()) {
@@ -202,7 +246,7 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
 
                         const apiVersion = !resources?.length ? DEFAULT_API_VERSION : await this._resourceTypeRepository.getApiVersion(resources[0].id);
 
-                        result.push({
+                        const node = {
                             nodeType: ResourceExplorerNodeTypeEnum.ResourceGroupResourceType,
                             nodeId: parent.nodeId,
                             label: `${resType} (${resources.length})`,
@@ -211,7 +255,11 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
                             tenantId: parent.tenantId,
                             resources,
                             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
-                        });
+                        };
+                        
+                        // Sorting by name on the fly
+                        const index = result.findIndex(n => n.label! > node.label!);
+                        result.splice(index < 0 ? result.length : index, 0, node);
                     }
 
                     break;
@@ -242,7 +290,9 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
                             arguments: [node]
                         };
 
-                        result.push(node);
+                        // Sorting by name on the fly
+                        const index = result.findIndex(n => n.label! > node.label!);
+                        result.splice(index < 0 ? result.length : index, 0, node);
                     }
 
                     break;

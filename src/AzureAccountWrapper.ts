@@ -18,6 +18,8 @@ export interface TokenResponse {
 export const ARM_URL = `https://management.azure.com`;
 export const DEFAULT_API_VERSION = '2023-07-01';
 
+const MAX_BATCHES = 100;
+
 // Wraps Azure Acccount extension
 export class AzureAccountWrapper {
 
@@ -126,12 +128,41 @@ export class AzureAccountWrapper {
         return !!this._account && !!(await this._account.waitForFilters()) && (this._account.filters.length > 0);
     }
 
+    async queryGraph(resourceType: string): Promise<any[]>{
+
+        let uri = `${ARM_URL}/providers/Microsoft.ResourceGraph/resources?api-version=2022-10-01`;
+
+        let result: any[] = [];
+        let skipToken = undefined;
+
+        for (let i = 0; i < MAX_BATCHES; i++) {
+
+            const body: any = {
+                query: `resources | where type == "${resourceType.toLowerCase()}"`,
+                options: {
+                    '$skipToken': skipToken
+                }
+            };
+
+            const response = await axios.post(uri, body, { headers: { 'Authorization': `Bearer ${await this.getToken()}` } });
+
+            result.push(...response.data?.data ?? []);
+
+            skipToken = response.data['$skipToken'];
+            if (!skipToken) {
+                break;
+            }
+        }
+
+        return result;
+    }
+
     async query(path: string, apiVersion: string = DEFAULT_API_VERSION): Promise<any> {
 
         let uri = `${ARM_URL}${path}?api-version=${apiVersion}`;
 
         let result: any = undefined;
-        while (true) {
+        for (let i = 0; i < MAX_BATCHES; i++) {
 
             let response;
 
@@ -178,13 +209,14 @@ export class AzureAccountWrapper {
     async apply(method: string, resourceId: string, data: any, apiVersion: string): Promise<AxiosResponse>{
 
         try {
-         
-            return await axios({
+
+            const response = await axios({
                 method,
                 url: `${ARM_URL}${resourceId}?api-version=${apiVersion}`,
                 data,
-                headers: { 'Authorization': `Bearer ${await this._account.getToken()}` }
+                headers: { 'Authorization': `Bearer ${await this.getToken()}` }
             });
+            return response.data;
                 
         } catch (err: any) {
 
@@ -194,12 +226,13 @@ export class AzureAccountWrapper {
                 throw err;
             }
 
-            return await axios({
+            const response =  await axios({
                 method,
                 url: `${ARM_URL}${resourceId}?api-version=${apiVersion}`,
                 data,
-                headers: { 'Authorization': `Bearer ${await this._account.getToken()}` }
+                headers: { 'Authorization': `Bearer ${await this.getToken()}` }
             });
+            return response.data;
         }
     }
 
