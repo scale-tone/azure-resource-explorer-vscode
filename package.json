@@ -32,12 +32,18 @@
         "title": "Apply JSON from current file to this resource..."
       },
       {
+        "command": "azure-resource-explorer-for-vscode.view-context.copyUrl",
+        "title": "Copy full URL to Clipboard"
+      },
+      {
         "command": "azure-resource-explorer-for-vscode.view-context.refresh",
         "title": "Refresh",
-        "icon": {
-          "light": "resources/light/refresh.svg",
-          "dark": "resources/dark/refresh.svg"
-        }
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "azure-resource-explorer-for-vscode.view-context.copyToken",
+        "title": "Copy access token to Clipboard",
+        "icon": "$(key)"
       }
     ],
     "menus": {
@@ -51,11 +57,21 @@
           "command": "azure-resource-explorer-for-vscode.view-context.applyCurrentJson",
           "when": "azure-resource-explorer-for-vscode-tree-view && viewItem == ResourceGroupResource",
           "group": "azure-resource-explorer-for-vscode.view-context-group@2"
+        },
+        {
+          "command": "azure-resource-explorer-for-vscode.view-context.copyUrl",
+          "when": "azure-resource-explorer-for-vscode-tree-view",
+          "group": "azure-resource-explorer-for-vscode.view-context-group@3"
         }
       ],
       "view/title": [
         {
           "command": "azure-resource-explorer-for-vscode.view-context.refresh",
+          "when": "view == azure-resource-explorer-for-vscode-tree-view",
+          "group": "navigation"
+        },
+        {
+          "command": "azure-resource-explorer-for-vscode.view-context.copyToken",
           "when": "view == azure-resource-explorer-for-vscode-tree-view",
           "group": "navigation"
         }

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { AzureAccountWrapper } from './AzureAccountWrapper';
+import { ARM_URL, AzureAccountWrapper, DEFAULT_API_VERSION } from './AzureAccountWrapper';
 import { ResourceTypesRepository } from './ResourceTypesRepository';
 import { ArmFsProvider } from './ArmFsProvider';
 
@@ -17,6 +17,7 @@ export enum ResourceExplorerNodeTypeEnum {
 export type ResourceExplorerTreeItem = vscode.TreeItem & {
 
     nodeType: ResourceExplorerNodeTypeEnum,
+    url: string,
     nodeId?: string,
     resources?: any[]
 };
@@ -32,6 +33,24 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
     refresh(): void {
         this._resourceTypeRepository.cleanup();
         this._onDidChangeTreeData.fire(undefined);
+    }
+
+    async copyToken(): Promise<void>{
+
+        vscode.env.clipboard.writeText(await this._account.getToken());
+
+        vscode.window.showInformationMessage(`Access token was copied to Clipboard`);
+    }
+
+    async copyUrl(node: ResourceExplorerTreeItem): Promise<void>{
+
+        if (!node?.url) {
+            throw new Error(`Resource URL is empty`);
+        }
+
+        vscode.env.clipboard.writeText(node.url);
+
+        vscode.window.showInformationMessage(`Resource URL was copied to Clipboard`);
     }
 
     // Does nothing, actually
@@ -50,12 +69,14 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
                     result.push({
                         nodeType: ResourceExplorerNodeTypeEnum.Providers,
                         label: 'Providers',
+                        url: `${ARM_URL}/providers?api-version=${DEFAULT_API_VERSION}`,
                         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                     });
 
                     result.push({
                         nodeType: ResourceExplorerNodeTypeEnum.Subscriptions,
                         label: 'Subscriptions',
+                        url: `${ARM_URL}/subscriptions?api-version=${DEFAULT_API_VERSION}`,
                         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                     });
 
@@ -71,6 +92,8 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
                         result.push({
                             nodeType: ResourceExplorerNodeTypeEnum.ProviderNamespace,
                             label: ns,
+                            nodeId: ns,
+                            url: `${ARM_URL}/providers/${ns}?api-version=${DEFAULT_API_VERSION}`,
                             resources: providerMap[ns],
                             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                         });
@@ -86,6 +109,7 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
                         result.push({
                             nodeType: ResourceExplorerNodeTypeEnum.ProviderResourceType,
                             label: resourceType.resourceType,
+                            url: `${ARM_URL}/providers/${parent.nodeId}/${resourceType.resourceType}?api-version=${DEFAULT_API_VERSION}`,
                             collapsibleState: vscode.TreeItemCollapsibleState.None,
                         });
                     }
@@ -101,6 +125,7 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
                             nodeType: ResourceExplorerNodeTypeEnum.Subscription,
                             nodeId: subscription.subscription.subscriptionId,
                             label: subscription.subscription.displayName,
+                            url: `${ARM_URL}/subscriptions/${subscription.subscription.subscriptionId}?api-version=${DEFAULT_API_VERSION}`,
                             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                         });
                     }
@@ -118,6 +143,7 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
                             nodeType: ResourceExplorerNodeTypeEnum.ResourceGroup,
                             nodeId: resGroup.id,
                             label: resGroup.name,
+                            url: `${ARM_URL}${resGroup.id}?api-version=${DEFAULT_API_VERSION}`,
                             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                         };
 
@@ -144,10 +170,13 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
 
                         const resources = resourcesByTypes[resType];
 
+                        const apiVersion = !resources?.length ? DEFAULT_API_VERSION : await this._resourceTypeRepository.getApiVersion(resources[0].id);
+
                         result.push({
                             nodeType: ResourceExplorerNodeTypeEnum.ResourceGroupResourceType,
                             nodeId: parent.nodeId,
                             label: `${resType} (${resources.length})`,
+                            url: `${ARM_URL}${parent.nodeId}/providers/${resType}?api-version=${apiVersion}`,
                             resources,
                             collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
                         });
@@ -160,6 +189,8 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
 
                     for (const res of parent.resources ?? []) {
 
+                        const apiVersion = await this._resourceTypeRepository.getApiVersion(res.id);
+
                         const node: ResourceExplorerTreeItem = {
                             nodeType: ResourceExplorerNodeTypeEnum.ResourceGroupResource,
                             contextValue: `${ResourceExplorerNodeTypeEnum[ResourceExplorerNodeTypeEnum.ResourceGroupResource]}`,
@@ -167,6 +198,7 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
                             label: res.name,
                             description: res.location,
                             tooltip: res.kind,
+                            url: `${ARM_URL}${encodeURI(res.id)}?api-version=${apiVersion}`,
                             collapsibleState: vscode.TreeItemCollapsibleState.None
                         };
 

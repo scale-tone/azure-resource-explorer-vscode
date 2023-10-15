@@ -15,6 +15,9 @@ export interface TokenResponse {
     refreshToken?: string;
 }
 
+export const ARM_URL = `https://management.azure.com`;
+export const DEFAULT_API_VERSION = '2023-07-01';
+
 // Wraps Azure Acccount extension
 export class AzureAccountWrapper {
 
@@ -146,9 +149,9 @@ export class AzureAccountWrapper {
         return !!this._account && !!(await this._account.waitForFilters()) && (this._account.filters.length > 0);
     }
 
-    async query(path: string, apiVersion: string = '2023-07-01'): Promise<any> {
+    async query(path: string, apiVersion: string = DEFAULT_API_VERSION): Promise<any> {
 
-        let uri = `https://management.azure.com${path}?api-version=${apiVersion}`;
+        let uri = `${ARM_URL}${path}?api-version=${apiVersion}`;
 
         let result: any = undefined;
         while (true) {
@@ -172,7 +175,7 @@ export class AzureAccountWrapper {
                     throw err;
                 }
 
-                uri = `https://management.azure.com${path}?api-version=${newApiVersion}`;
+                uri = `${ARM_URL}${path}?api-version=${newApiVersion}`;
                 response = await axios.get(uri, { headers: { 'Authorization': `Bearer ${await this.getToken()}` } });
             }
 
@@ -201,7 +204,7 @@ export class AzureAccountWrapper {
          
             return await axios({
                 method,
-                url: `https://management.azure.com${resourceId}?api-version=${apiVersion}`,
+                url: `${ARM_URL}${resourceId}?api-version=${apiVersion}`,
                 data,
                 headers: { 'Authorization': `Bearer ${await this._account.getToken()}` }
             });
@@ -216,7 +219,7 @@ export class AzureAccountWrapper {
 
             return await axios({
                 method,
-                url: `https://management.azure.com${resourceId}?api-version=${apiVersion}`,
+                url: `${ARM_URL}${resourceId}?api-version=${apiVersion}`,
                 data,
                 headers: { 'Authorization': `Bearer ${await this._account.getToken()}` }
             });
