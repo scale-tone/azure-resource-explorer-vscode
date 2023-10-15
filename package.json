@@ -28,6 +28,10 @@
         "title": "Show as ARM template"
       },
       {
+        "command": "azure-resource-explorer-for-vscode.view-context.showAsBicep",
+        "title": "Show as Bicep"
+      },
+      {
         "command": "azure-resource-explorer-for-vscode.view-context.applyCurrentJson",
         "title": "Apply JSON from current file to this resource..."
       },
@@ -62,24 +66,29 @@
           "group": "azure-resource-explorer-for-vscode.view-context-group@1"
         },
         {
-          "command": "azure-resource-explorer-for-vscode.view-context.applyCurrentJson",
+          "command": "azure-resource-explorer-for-vscode.view-context.showAsBicep",
           "when": "azure-resource-explorer-for-vscode-tree-view && viewItem == Resource",
           "group": "azure-resource-explorer-for-vscode.view-context-group@2"
         },
         {
+          "command": "azure-resource-explorer-for-vscode.view-context.applyCurrentJson",
+          "when": "azure-resource-explorer-for-vscode-tree-view && viewItem == Resource",
+          "group": "azure-resource-explorer-for-vscode.view-context-group@3"
+        },
+        {
           "command": "azure-resource-explorer-for-vscode.view-context.copyUrl",
           "when": "azure-resource-explorer-for-vscode-tree-view",
-          "group": "azure-resource-explorer-for-vscode.view-context-group@3"
+          "group": "azure-resource-explorer-for-vscode.view-context-group@4"
         },
         {
           "command": "azure-resource-explorer-for-vscode.view-context.copyResourceId",
           "when": "azure-resource-explorer-for-vscode-tree-view && viewItem == Resource",
-          "group": "azure-resource-explorer-for-vscode.view-context-group@4"
+          "group": "azure-resource-explorer-for-vscode.view-context-group@5"
         },
         {
           "command": "azure-resource-explorer-for-vscode.view-context.openInPortal",
           "when": "azure-resource-explorer-for-vscode-tree-view && viewItem == Resource",
-          "group": "azure-resource-explorer-for-vscode.view-context-group@5"
+          "group": "azure-resource-explorer-for-vscode.view-context-group@6"
         }
       ],
       "view/title": [

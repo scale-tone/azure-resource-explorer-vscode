@@ -59,6 +59,7 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.registerTreeDataProvider('azure-resource-explorer-for-vscode-tree-view', treeView),
 
 		vscode.commands.registerCommand('azure-resource-explorer-for-vscode.view-context.showAsArm', (item) => doAndShowError(() => fsProvider.show(item.nodeId), 'Failed to show the code')),
+		vscode.commands.registerCommand('azure-resource-explorer-for-vscode.view-context.showAsBicep', (item) => doAndShowError(() => treeView.openAsBicep(item), 'Failed to show the code')),
         vscode.commands.registerCommand('azure-resource-explorer-for-vscode.view-context.applyCurrentJson', (item) => doAndShowError(() => treeView.applyCurrentJson(item), 'Failed to apply current JSON')),
         vscode.commands.registerCommand('azure-resource-explorer-for-vscode.view-context.copyUrl', (item) => doAndShowError(() => treeView.copyUrl(item), 'Failed to copy URL')),
         vscode.commands.registerCommand('azure-resource-explorer-for-vscode.view-context.copyResourceId', (item) => doAndShowError(() => treeView.copyResourceId(item), 'Failed to copy ResourceId')),

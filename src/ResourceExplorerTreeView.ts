@@ -1,5 +1,11 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as cp from 'child_process';
+import * as util from 'util';
+import * as path from 'path';
 import { openUrl } from '@microsoft/vscode-azext-utils';
+
+const execAsync = util.promisify(cp.exec);
 
 import { ARM_URL, AzureAccountWrapper, DEFAULT_API_VERSION } from './AzureAccountWrapper';
 import { ResourceTypesRepository } from './ResourceTypesRepository';
@@ -77,6 +83,58 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
         const portalUrl = `${node.portalUrl}/#@${node.tenantId}/resource${node.nodeId}`;
 
         await openUrl(portalUrl);
+    }
+
+    async openAsBicep(node: ResourceExplorerTreeItem): Promise<void>{
+
+        const resourceId = node?.nodeId;
+        if (!resourceId) {
+            throw new Error(`ResourceId is empty`);
+        }
+
+        const curPath = vscode.workspace?.workspaceFolders?.length ? vscode.workspace?.workspaceFolders[0].uri.fsPath : '';
+        if (!curPath) {
+            throw new Error(`For this to work you need to have a folder or project opened`);
+        }
+
+        const progressOptions = {
+            location: vscode.ProgressLocation.Notification,
+            title: `GET ${resourceId}`
+        };
+
+        await vscode.window.withProgress(progressOptions, async (progress, token) => {
+
+            const apiVersion = await this._resourceTypeRepository.getApiVersion(resourceId);
+            const data = await this._account.query(encodeURI(resourceId), apiVersion);
+
+            data.apiVersion = apiVersion;
+            delete data['id'];
+            delete data['systemData'];
+
+            const json = {
+                '$schema': 'https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#',
+                resources: [
+                    data
+                ]
+            };
+
+            const jsonFilePath = path.join(curPath, `${node.label}.json`);
+            const bicepFilePath = path.join(curPath, `${node.label}.bicep`);
+
+            await fs.promises.writeFile(jsonFilePath, JSON.stringify(json, null, 3));
+
+            try {
+             
+                await execAsync(`az bicep decompile --file "${jsonFilePath}"`);
+
+                const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(bicepFilePath));
+                await vscode.window.showTextDocument(doc, { preview: false });
+                    
+            } finally {
+
+                await fs.promises.rm(jsonFilePath, { force: true });
+            }
+        });
     }
 
     // Does nothing, actually
