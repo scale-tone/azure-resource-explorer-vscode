@@ -92,8 +92,11 @@ export class ArmFsProvider implements vscode.FileSystemProvider {
 
         return await vscode.window.withProgress(progressOptions, async (progress, token) => {
 
-            return await this._account.apply(method, encodeURI(resourceId!), json, apiVersion);
+            const response = await this._account.apply(method, encodeURI(resourceId!), json, apiVersion);
 
+            vscode.window.showInformationMessage(`${method} ${resourceId} returned ${response.status}`);
+
+            return response.data;
         });
     }
 

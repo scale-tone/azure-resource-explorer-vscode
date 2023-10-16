@@ -371,8 +371,6 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
             throw new Error('Could not find an open document');
         }
 
-        const json = JSON.parse(document.getText());
- 
-        await this._fsProvider.applyJson(item.nodeId, json);
+        await this._fsProvider.applyJson(item.nodeId, document.getText());
     }
 }

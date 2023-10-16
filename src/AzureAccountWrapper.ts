@@ -142,13 +142,12 @@ export class AzureAccountWrapper {
 
         try {
 
-            const response = await axios({
+            return await axios({
                 method,
                 url: `${ARM_URL}${resourceId}?api-version=${apiVersion}`,
                 data,
                 headers: { 'Authorization': `Bearer ${await this.getToken()}` }
             });
-            return response.data;
                 
         } catch (err: any) {
 
@@ -158,13 +157,12 @@ export class AzureAccountWrapper {
                 throw err;
             }
 
-            const response =  await axios({
+            return await axios({
                 method,
                 url: `${ARM_URL}${resourceId}?api-version=${apiVersion}`,
                 data,
                 headers: { 'Authorization': `Bearer ${await this.getToken()}` }
             });
-            return response.data;
         }
     }
 
