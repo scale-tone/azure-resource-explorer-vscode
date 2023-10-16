@@ -3,13 +3,38 @@
   "displayName": "Azure Resource Explorer for VsCode",
   "description": "Explore and update your Azure resources in Visual Studio Code",
   "version": "0.0.1",
+  "preview": true,
   "engines": {
     "vscode": "^1.83.0"
   },
   "categories": [
+    "Azure",
+    "Visualization",
     "Other"
-  ],
-  "activationEvents": [
+],
+"homepage": "https://github.com/scale-tone/azure-resource-explorer-vscode",
+"repository": {
+    "type": "git",
+    "url": "https://github.com/scale-tone/azure-resource-explorer-vscode"
+},
+"bugs": {
+    "url": "https://github.com/scale-tone/azure-resource-explorer-vscode/issues"
+},
+"icon": "logo.png",
+"keywords": [
+    "ARM",
+    "arm-template",
+    "Azure",
+    "Azure Resource Manager Template",
+    "Azure Template",
+    "Resource Manager",
+    "Azure Resource Explorer",
+    "Resource Explorer",
+    "Bicep"
+],
+"publisher": "az-resource-explorer-vscode",
+"license": "MIT",
+"activationEvents": [
     "onView:azure-resource-explorer-for-vscode-tree-view"
   ],
   "main": "./dist/extension.js",
