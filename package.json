@@ -2,10 +2,9 @@
   "name": "azure-resource-explorer-for-vscode",
   "displayName": "Azure Resource Explorer for VsCode",
   "description": "Combined power of Azure Portal's Resource Explorer and https://resources.azure.com in your VsCode",
-  "version": "0.0.1",
-  "preview": true,
+  "version": "1.0.0",
   "engines": {
-    "vscode": "^1.83.0"
+    "vscode": "^1.80.0"
   },
   "categories": [
     "Azure",
@@ -158,7 +157,7 @@
   "devDependencies": {
     "@types/mocha": "^10.0.2",
     "@types/node": "18.x",
-    "@types/vscode": "^1.83.0",
+    "@types/vscode": "^1.80.0",
     "@typescript-eslint/eslint-plugin": "^6.7.3",
     "@typescript-eslint/parser": "^6.7.3",
     "@vscode/test-electron": "^2.3.4",
