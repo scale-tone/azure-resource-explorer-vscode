@@ -2,7 +2,7 @@
   "name": "azure-resource-explorer-for-vscode",
   "displayName": "Azure Resource Explorer for VsCode",
   "description": "Combined power of Azure Portal's Resource Explorer and https://resources.azure.com in your VsCode",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "engines": {
     "vscode": "^1.80.0"
   },

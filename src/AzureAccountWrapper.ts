@@ -170,6 +170,19 @@ export class AzureAccountWrapper {
 
     private async getAuthSession(providerId: string, scopes: string[]): Promise<vscode.AuthenticationSession> {
 
+        // Trying to clarify the correct tenantId
+        const subscriptions = await this.getSubscriptions();
+        if (!!subscriptions?.length) {
+
+            const subscription = subscriptions[0];
+            const tenantId = (subscription.session as any)?.tenantId;
+
+            if (!!tenantId) {
+                
+                scopes.push(`VSCODE_TENANT:${(subscription.session as any).tenantId}`);
+            }
+        }
+
         // First trying silent mode
         let authSession = await vscode.authentication.getSession(providerId, scopes, { silent: true });
     
