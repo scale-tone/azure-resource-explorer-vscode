@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as cp from 'child_process';
 import * as util from 'util';
 import * as path from 'path';
+import * as crypto from 'crypto';
 import { openUrl } from '@microsoft/vscode-azext-utils';
 
 const execAsync = util.promisify(cp.exec);
@@ -97,6 +98,21 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
             throw new Error(`For this to work you need to have a folder or project opened`);
         }
 
+        const tempFileName = crypto.randomBytes(20).toString('hex');
+        const jsonFilePath = path.join(curPath, `${tempFileName}.json`);
+        const tempBicepFilePath = path.join(curPath, `${tempFileName}.bicep`);
+
+        let bicepFilePath: string | undefined = path.join(curPath, `${node.label}.bicep`);
+
+        if (fs.existsSync(bicepFilePath)) {
+            
+            bicepFilePath = await vscode.window.showInputBox({ value: bicepFilePath, title: `The file ${path.basename(bicepFilePath)} already exists in the current folder. Provide a different file name or just confirm that you want to overwrite the existing one.` });
+
+            if (!bicepFilePath) {
+                return;
+            }
+        }
+
         const progressOptions = {
             location: vscode.ProgressLocation.Notification,
             title: `GET ${resourceId}`
@@ -118,16 +134,15 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
                 ]
             };
 
-            const jsonFilePath = path.join(curPath, `${node.label}.json`);
-            const bicepFilePath = path.join(curPath, `${node.label}.bicep`);
-
             await fs.promises.writeFile(jsonFilePath, JSON.stringify(json, null, 3));
 
             try {
              
                 await execAsync(`az bicep decompile --file "${jsonFilePath}"`);
 
-                const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(bicepFilePath));
+                await fs.promises.rename(tempBicepFilePath, bicepFilePath!);
+
+                const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(bicepFilePath!));
                 await vscode.window.showTextDocument(doc, { preview: false });
                     
             } finally {
