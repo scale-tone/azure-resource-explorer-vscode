@@ -151,7 +151,7 @@ export class AzureAccountWrapper {
                 
         } catch (err: any) {
 
-            // Trying to use another api-version, but only if this is the first request
+            // Trying to use another api-version
             const newApiVersion = this.tryToGetSupportedApiVersion(err.response);
             if (!newApiVersion) {
                 throw err;
