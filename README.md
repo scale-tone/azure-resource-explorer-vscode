@@ -2,6 +2,8 @@
 
 Combined power of [Azure Portal's Resource Explorer](https://portal.azure.com/#view/HubsExtension/ArmExplorerBlade) and [https://resources.azure.com](https://resources.azure.com) in your VsCode.
 
+[<img alt="Visual Studio Marketplace Installs" src="https://img.shields.io/visual-studio-marketplace/i/az-resource-explorer-vscode.azure-resource-explorer-for-vscode?label=VsCode%20Extension%20Installs">](https://marketplace.visualstudio.com/items?itemName=az-resource-explorer-vscode.azure-resource-explorer-for-vscode)
+
 ## How to install
 
 Install it from [VsCode marketplace](https://marketplace.visualstudio.com/items?itemName=az-resource-explorer-vscode.azure-resource-explorer-for-vscode). 
