@@ -1,6 +1,7 @@
 import { AzureAccountWrapper } from "./AzureAccountWrapper";
 
-export type ProvidersMap = { [namespace: string]: { resourceType: string, locations: string[], apiVersions: string[], defaultApiVersion?: string, capabilities: string }[] };
+export type ResourceType = { resourceType: string, locations: string[], apiVersions: string[], defaultApiVersion?: string, capabilities: string };
+export type ProvidersMap = { [namespace: string]: ResourceType[] };
 
 export class ResourceTypesRepository {
 
@@ -28,6 +29,44 @@ export class ResourceTypesRepository {
         return this._map!;
     }
 
+    async getNamespaces(): Promise<string[]> {
+
+        return Object.keys(await this.getProviderMap());
+    }
+
+    async getResources(namespace: string): Promise<ResourceType[]> {
+
+        const map = await this.getProviderMap();
+
+        return map[namespace]?.filter(t => !t.resourceType.includes('/'));
+    }
+
+    async getChildResourceTypes(resourceId: string): Promise<string[]> {
+
+        const resourceTypeMatch = /\/providers\/([^\/]+)\//i.exec(resourceId);
+        if (!resourceTypeMatch) {
+            
+            throw new Error(`Incorrect resourceId: ${resourceId}`);
+        }
+
+        const map = await this.getProviderMap();
+        const resTypes = map[resourceTypeMatch[1].toLowerCase()];
+
+        const path = resourceId.substring(resourceTypeMatch.index + resourceTypeMatch[0].length);
+        // In this array even items are subresource types and odd items are subresource names
+        const pathParts = path.split('/');
+
+        // Collecting even items
+        const resourceTypeParts = pathParts.filter((_, i) => i % 2 === 0);
+        const resourceType = resourceTypeParts.join('/');
+
+        return resTypes.
+            filter(t => t.resourceType.toLowerCase().startsWith(`${resourceType}/`)).
+            map(t => t.resourceType.substring(`${resourceType}/`.length)).
+            filter(t => !t.includes('/'))
+        ;
+    }
+
     async getApiVersion(resourceId: string): Promise<string>{
 
         const resourceTypeMatch = /\/providers\/([^\/]+)\/([^\/]+)\//i.exec(resourceId);
@@ -37,7 +76,6 @@ export class ResourceTypesRepository {
         }
 
         const map = await this.getProviderMap();
-
         const resTypes = map[resourceTypeMatch[1].toLowerCase()];
 
         const resType = resTypes.find(t => t.resourceType.toLowerCase() === resourceTypeMatch[2].toLowerCase());

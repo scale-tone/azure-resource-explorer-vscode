@@ -45,7 +45,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     const fsProvider = new ArmFsProvider(azureAccount, resourceTypeRepository);
 
-    const treeView = new ResourceExplorerTreeView(azureAccount, resourceTypeRepository, fsProvider, context.asAbsolutePath('resources'));
+    const treeView = new ResourceExplorerTreeView(azureAccount, resourceTypeRepository, fsProvider, context.asAbsolutePath('resources'), log);
 
     context.subscriptions.push(
 
