@@ -264,7 +264,7 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
                             url: `${ARM_URL}${encodeURI(res.id)}?api-version=${apiVersion}`,
                             portalUrl: 'https://portal.azure.com',
                             tenantId: res.tenantId,
-                            collapsibleState: vscode.TreeItemCollapsibleState.None
+                            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed
                         };
 
                         node.command = {
