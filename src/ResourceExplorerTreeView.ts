@@ -11,6 +11,7 @@ const execAsync = util.promisify(cp.exec);
 import { ARM_URL, AzureAccountWrapper, DEFAULT_API_VERSION } from './AzureAccountWrapper';
 import { ResourceTypesRepository } from './ResourceTypesRepository';
 import { ArmFsProvider } from './ArmFsProvider';
+import { formatError } from './helpers';
 
 export enum ResourceExplorerNodeTypeEnum {
     Providers = 1,
@@ -108,7 +109,8 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
         const jsonFilePath = path.join(curPath, `${tempFileName}.json`);
         const tempBicepFilePath = path.join(curPath, `${tempFileName}.bicep`);
 
-        let bicepFilePath: string | undefined = path.join(curPath, `${node.label}.bicep`);
+        const bicepFileName = (node.label as string).replace(/\//g, '-');
+        let bicepFilePath: string | undefined = path.join(curPath, `${bicepFileName}.bicep`);
 
         if (fs.existsSync(bicepFilePath)) {
             
@@ -143,19 +145,31 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
             await fs.promises.writeFile(jsonFilePath, JSON.stringify(json, null, 3));
 
             try {
-             
+
                 await execAsync(`az bicep decompile --file "${jsonFilePath}"`);
 
-                await fs.promises.rename(tempBicepFilePath, bicepFilePath!);
+            } catch (err) {
 
-                const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(bicepFilePath!));
-                await vscode.window.showTextDocument(doc, { preview: false });
-                    
+                // Bicep decompile can produce errors, but still create the resulting file. In that case still showing it.
+                if (fs.existsSync(tempBicepFilePath)) {
+
+                    this._log(`az bicep decompile produced errors. ${formatError(err)}`, true, true);
+
+                } else {
+                    // otherwise rethrowing
+                    throw err;
+                }
+
             } finally {
 
                 await fs.promises.rm(jsonFilePath, { force: true });
             }
-        });
+
+            await fs.promises.rename(tempBicepFilePath, bicepFilePath!);
+
+            const doc = await vscode.workspace.openTextDocument(vscode.Uri.file(bicepFilePath!));
+            await vscode.window.showTextDocument(doc, { preview: false });
+    });
     }
 
     // Does nothing, actually
@@ -441,7 +455,7 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
                             
                     } catch (err) {
 
-                        this._log(`Failed to load subresources. ${this.formatError(err)}`, true, true);
+                        this._log(`Failed to load subresources. ${formatError(err)}`, true, true);
                     }
 
                     break;
@@ -449,7 +463,7 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
             }
 
         } catch (err) {
-            vscode.window.showErrorMessage(`Failed to load the Resource Explorer view. ${this.formatError(err)}`);
+            vscode.window.showErrorMessage(`Failed to load the Resource Explorer view. ${formatError(err)}`);
         }
 
         return result;
@@ -463,10 +477,5 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
         }
 
         await this._fsProvider.applyJson(item.nodeId, document.getText());
-    }
-
-    private formatError(err: any): string {
-
-        return `${(err as any).message ?? err}. ${err.response?.data?.error?.message ?? ''}`;
     }
 }

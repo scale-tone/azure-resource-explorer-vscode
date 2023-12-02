@@ -3,6 +3,7 @@ import { ResourceExplorerTreeView } from './ResourceExplorerTreeView';
 import { AzureAccountWrapper } from './AzureAccountWrapper';
 import { ResourceTypesRepository } from './ResourceTypesRepository';
 import { ARM_SCHEME, ArmFsProvider } from './ArmFsProvider';
+import { formatError } from './helpers';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -31,8 +32,8 @@ export function activate(context: vscode.ExtensionContext) {
 
             () => todo().catch(err => {
 
-                vscode.window.showErrorMessage(`${errorMessage}. ${err.message ?? err}`);
-                log(`${errorMessage}. ${err.message ?? err} ${JSON.stringify(err.response?.data)}`, true, true);
+                vscode.window.showErrorMessage(`${errorMessage}. ${formatError(err)}`);
+                log(`${errorMessage}. ${formatError(err)}`, true, true);
             }
         ));
 
