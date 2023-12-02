@@ -1,5 +1,13 @@
 # Change Log
 
+## Version 1.2
+
+- Now showing the entire resource hierarchy (not just root resources), e.g.:
+
+  <img width="300px" src="https://github.com/scale-tone/azure-resource-explorer-vscode/assets/5447190/4d64bf91-758f-4663-8c2b-d8db1201eeda" />
+
+- Bicep generation fixes.
+
 ## Version 1.1
 
 - Checking whether a .bicep file already exists before overwriting it ([#1](https://github.com/scale-tone/azure-resource-explorer-vscode/issues/1)).
