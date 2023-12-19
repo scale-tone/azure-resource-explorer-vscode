@@ -65,6 +65,8 @@ export function activate(context: vscode.ExtensionContext) {
 
         vscode.commands.registerCommand('azure-resource-explorer-for-vscode.view-context.refresh', () => doAndShowError(async () => treeView.refresh(), 'TreeView refresh failed')),
         vscode.commands.registerCommand('azure-resource-explorer-for-vscode.view-context.copyToken', () => doAndShowError(() => treeView.copyToken(), 'Failed to copy access token')),
+
+        vscode.commands.registerCommand('azure-resource-explorer-for-vscode.view-context.copySecret', (item) => doAndShowError(() => treeView.copySecret(item), 'Failed to copy secret')),
     );
 }
 

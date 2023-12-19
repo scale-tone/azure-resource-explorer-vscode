@@ -22,6 +22,7 @@ export enum ResourceExplorerNodeTypeEnum {
     ResourceGroup,
     ResourceGroupResourceType,
     Resource,
+    ResourceWithSecrets,
     SubResourceType
 }
 
@@ -51,6 +52,29 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
     refresh(): void {
         this._resourceTypeRepository.cleanup();
         this._onDidChangeTreeData.fire(undefined);
+    }
+
+    async copySecret(node: ResourceExplorerTreeItem): Promise<void>{
+
+        if (!node?.nodeId) {
+            throw new Error(`ResourceId is empty`);
+        }
+
+        const keeShepherdExtension = vscode.extensions.getExtension('kee-shepherd.kee-shepherd-vscode');
+
+        if (!keeShepherdExtension) {
+
+            const userResponse = await vscode.window.showInformationMessage(`For this to work you need to have the [KeeShepherd](https://marketplace.visualstudio.com/items?itemName=kee-shepherd.kee-shepherd-vscode) extension installed.`, 'Install');
+
+            if (userResponse === 'Install') {
+                
+                await vscode.commands.executeCommand(`extension.open`, `kee-shepherd.kee-shepherd-vscode`);
+            }
+
+            return;
+        }
+
+        await keeShepherdExtension.exports.copySecretToClipboard(node.nodeId);
     }
 
     async copyToken(): Promise<void>{
@@ -254,9 +278,11 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
                         
                         const apiVersion = await this._resourceTypeRepository.getApiVersion(res.id);
 
+                        const nodeType = this.areResourceSecretsSupported(res.id) ? ResourceExplorerNodeTypeEnum.ResourceWithSecrets :  ResourceExplorerNodeTypeEnum.Resource;
+
                         const node: ResourceExplorerTreeItem = {
-                            nodeType: ResourceExplorerNodeTypeEnum.Resource,
-                            contextValue: `${ResourceExplorerNodeTypeEnum[ResourceExplorerNodeTypeEnum.Resource]}`,
+                            nodeType,
+                            contextValue: `${ResourceExplorerNodeTypeEnum[nodeType]}`,
                             nodeId: res.id,
                             label: res.name,
                             description: res.location,
@@ -365,9 +391,11 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
 
                         const apiVersion = await this._resourceTypeRepository.getApiVersion(res.id);
 
+                        const nodeType = this.areResourceSecretsSupported(res.id) ? ResourceExplorerNodeTypeEnum.ResourceWithSecrets :  ResourceExplorerNodeTypeEnum.Resource;
+                        
                         const node: ResourceExplorerTreeItem = {
-                            nodeType: ResourceExplorerNodeTypeEnum.Resource,
-                            contextValue: `${ResourceExplorerNodeTypeEnum[ResourceExplorerNodeTypeEnum.Resource]}`,
+                            nodeType,
+                            contextValue: `${ResourceExplorerNodeTypeEnum[nodeType]}`,
                             nodeId: res.id,
                             label: res.name,
                             description: res.location,
@@ -391,8 +419,9 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
 
                     break;
                 }
-                    
-                case ResourceExplorerNodeTypeEnum.Resource: {
+                
+                case ResourceExplorerNodeTypeEnum.Resource:
+                case ResourceExplorerNodeTypeEnum.ResourceWithSecrets: {
 
                     const childResourceTypes = await this._resourceTypeRepository.getChildResourceTypes(parent.nodeId!);
 
@@ -429,9 +458,11 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
                         
                             const apiVersion = await this._resourceTypeRepository.getApiVersion(res.id);
     
+                            const nodeType = this.areResourceSecretsSupported(res.id) ? ResourceExplorerNodeTypeEnum.ResourceWithSecrets :  ResourceExplorerNodeTypeEnum.Resource;
+                            
                             const node: ResourceExplorerTreeItem = {
-                                nodeType: ResourceExplorerNodeTypeEnum.Resource,
-                                contextValue: `${ResourceExplorerNodeTypeEnum[ResourceExplorerNodeTypeEnum.Resource]}`,
+                                nodeType,
+                                contextValue: `${ResourceExplorerNodeTypeEnum[nodeType]}`,
                                 nodeId: res.id,
                                 label: res.name,
                                 description: res.location,
@@ -477,5 +508,32 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
         }
 
         await this._fsProvider.applyJson(item.nodeId, document.getText());
+    }
+
+    private readonly _resourceTypesWithSupportedSecretsRegexes = [
+        new RegExp('/providers/microsoft.insights/components/([^/]+)$', 'i'),
+        new RegExp('/providers/microsoft.cognitiveservices/accounts/([^/]+)$', 'i'),
+        new RegExp('/providers/microsoft.maps/accounts/([^/]+)$', 'i'),
+        new RegExp('/providers/microsoft.cache/redis/([^/]+)$', 'i'),
+        new RegExp('/providers/microsoft.search/searchservices/([^/]+)$', 'i'),
+        new RegExp('/providers/microsoft.signalrservice/signalr/([^/]+)$', 'i'),
+        new RegExp('/providers/microsoft.documentdb/databaseaccounts/([^/]+)$', 'i'),
+        new RegExp('/providers/microsoft.eventgrid/topics/([^/]+)$', 'i'),
+        new RegExp('/providers/microsoft.eventhub/namespaces/([^/]+)$', 'i'),
+        new RegExp('/providers/microsoft.keyvault/vaults/([^/]+)/(keys|secrets)/([^/]+)$', 'i'),
+        new RegExp('/providers/microsoft.servicebus/namespaces/([^/]+)$', 'i'),
+        new RegExp('/providers/microsoft.storage/storageaccounts/([^/]+)$', 'i')
+    ];
+    
+    private areResourceSecretsSupported(resourceId: string): boolean {
+
+        for (const regex of this._resourceTypesWithSupportedSecretsRegexes) {
+            
+            if (regex.test(resourceId)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

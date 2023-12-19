@@ -80,23 +80,27 @@
         "command": "azure-resource-explorer-for-vscode.view-context.copyToken",
         "title": "Copy access token to Clipboard",
         "icon": "$(key)"
+      },
+      {
+        "command": "azure-resource-explorer-for-vscode.view-context.copySecret",
+        "title": "Copy Secret to Clipboard..."
       }
     ],
     "menus": {
       "view/item/context": [
         {
           "command": "azure-resource-explorer-for-vscode.view-context.showAsArm",
-          "when": "azure-resource-explorer-for-vscode-tree-view && viewItem == Resource",
+          "when": "azure-resource-explorer-for-vscode-tree-view && viewItem == Resource || viewItem == ResourceWithSecrets",
           "group": "azure-resource-explorer-for-vscode.view-context-group@1"
         },
         {
           "command": "azure-resource-explorer-for-vscode.view-context.showAsBicep",
-          "when": "azure-resource-explorer-for-vscode-tree-view && viewItem == Resource",
+          "when": "azure-resource-explorer-for-vscode-tree-view && viewItem == Resource || viewItem == ResourceWithSecrets",
           "group": "azure-resource-explorer-for-vscode.view-context-group@2"
         },
         {
           "command": "azure-resource-explorer-for-vscode.view-context.applyCurrentJson",
-          "when": "azure-resource-explorer-for-vscode-tree-view && viewItem == Resource",
+          "when": "azure-resource-explorer-for-vscode-tree-view && viewItem == Resource || viewItem == ResourceWithSecrets",
           "group": "azure-resource-explorer-for-vscode.view-context-group@3"
         },
         {
@@ -106,13 +110,18 @@
         },
         {
           "command": "azure-resource-explorer-for-vscode.view-context.copyResourceId",
-          "when": "azure-resource-explorer-for-vscode-tree-view && viewItem == Resource",
+          "when": "azure-resource-explorer-for-vscode-tree-view && viewItem == Resource || viewItem == ResourceWithSecrets",
           "group": "azure-resource-explorer-for-vscode.view-context-group@5"
         },
         {
           "command": "azure-resource-explorer-for-vscode.view-context.openInPortal",
-          "when": "azure-resource-explorer-for-vscode-tree-view && viewItem == Resource",
+          "when": "azure-resource-explorer-for-vscode-tree-view && viewItem == Resource || viewItem == ResourceWithSecrets",
           "group": "azure-resource-explorer-for-vscode.view-context-group@6"
+        },
+        {
+          "command": "azure-resource-explorer-for-vscode.view-context.copySecret",
+          "when": "azure-resource-explorer-for-vscode-tree-view && viewItem == ResourceWithSecrets",
+          "group": "azure-resource-explorer-for-vscode.view-context-secrets-group@1"
         }
       ],
       "view/title": [
