@@ -180,7 +180,7 @@
   },
   "dependencies": {
     "@microsoft/vscode-azext-utils": "^2.1.1",
-    "axios": "^1.5.1"
+    "axios": "^1.6.2"
   },
   "extensionDependencies": [
     "ms-vscode.azure-account"
