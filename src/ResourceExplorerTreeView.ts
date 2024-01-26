@@ -24,7 +24,7 @@ export enum ResourceExplorerNodeTypeEnum {
     Resource,
     ResourceWithSecrets,
     SubResourceType
-}
+};
 
 export type ResourceExplorerTreeItem = vscode.TreeItem & {
 
@@ -37,10 +37,16 @@ export type ResourceExplorerTreeItem = vscode.TreeItem & {
     resources?: any[]
 };
 
+export const SETTING_NAMES = {
+    ProviderFilter: 'AzureResourceExplorer-ProviderFilter',
+};
+
 // Resource Explorer as a TreeView
 export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.TreeItem> {
 
-    constructor(private _account: AzureAccountWrapper,
+    constructor(
+        private _context: vscode.ExtensionContext,
+        private _account: AzureAccountWrapper,
         private _resourceTypeRepository: ResourceTypesRepository,
         private _fsProvider: ArmFsProvider,
         private _resourcesFolder: string,
@@ -51,6 +57,37 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
 
     refresh(): void {
         this._resourceTypeRepository.cleanup();
+        this._onDidChangeTreeData.fire(undefined);
+    }
+
+    async applyFilter() {
+
+        const namespaces = await this._resourceTypeRepository.getNamespaces();
+        let selectedNamespaces = this._context.globalState.get(SETTING_NAMES.ProviderFilter) as string[];
+
+        const userChoice = await vscode.window.showQuickPick(
+            namespaces.map(ns => {
+                return {
+                    label: ns,
+                    picked: (!(selectedNamespaces?.length)) || selectedNamespaces.includes(ns)
+                };
+            }),
+            {
+                canPickMany: true,
+                title: 'Select providers to be shown'
+            });
+
+        if (!userChoice) {
+            return;
+        }
+
+        selectedNamespaces = userChoice.map(i => i.label);
+        if (selectedNamespaces.length === namespaces.length) {
+            selectedNamespaces = [];
+        }
+
+        this._context.globalState.update(SETTING_NAMES.ProviderFilter, selectedNamespaces);
+
         this._onDidChangeTreeData.fire(undefined);
     }
 
@@ -209,9 +246,13 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
 
                 case undefined: {
 
+                    const selectedNamespaces = this._context.globalState.get(SETTING_NAMES.ProviderFilter) as string[];
+
                     result.push({
                         nodeType: ResourceExplorerNodeTypeEnum.Providers,
                         label: 'Providers',
+                        contextValue: `${ResourceExplorerNodeTypeEnum[ResourceExplorerNodeTypeEnum.Providers]}`,
+                        description: (selectedNamespaces?.length) ? '(filtered)' : undefined,
                         url: `${ARM_URL}/providers?api-version=${DEFAULT_API_VERSION}`,
                         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                     });
@@ -225,13 +266,13 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
 
                     break;
                 }
-                    
+                
                 case ResourceExplorerNodeTypeEnum.Providers: {
 
-                    const providerMap = await this._resourceTypeRepository.getProviderMap();
                     const namespaces = await this._resourceTypeRepository.getNamespaces();
+                    const selectedNamespaces = this._context.globalState.get(SETTING_NAMES.ProviderFilter) as string[];
 
-                    for (const ns of namespaces) {
+                    for (const ns of namespaces.filter(ns => (!(selectedNamespaces?.length)) || selectedNamespaces.includes(ns))) {
 
                         const node = {
                             nodeType: ResourceExplorerNodeTypeEnum.ProviderNamespace,

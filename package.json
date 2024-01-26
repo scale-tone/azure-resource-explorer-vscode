@@ -2,7 +2,7 @@
   "name": "azure-resource-explorer-for-vscode",
   "displayName": "Azure Resource Explorer for VsCode",
   "description": "Observe/modify _all_ your Azure resources in VsCode",
-  "version": "1.2.0",
+  "version": "1.4.0",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -10,17 +10,17 @@
     "Azure",
     "Visualization",
     "Other"
-],
-"homepage": "https://github.com/scale-tone/azure-resource-explorer-vscode",
-"repository": {
+  ],
+  "homepage": "https://github.com/scale-tone/azure-resource-explorer-vscode",
+  "repository": {
     "type": "git",
     "url": "https://github.com/scale-tone/azure-resource-explorer-vscode"
-},
-"bugs": {
+  },
+  "bugs": {
     "url": "https://github.com/scale-tone/azure-resource-explorer-vscode/issues"
-},
-"icon": "logo.png",
-"keywords": [
+  },
+  "icon": "logo.png",
+  "keywords": [
     "ARM",
     "arm-template",
     "Azure",
@@ -30,10 +30,10 @@
     "Azure Resource Explorer",
     "Resource Explorer",
     "Bicep"
-],
-"publisher": "az-resource-explorer-vscode",
-"license": "MIT",
-"activationEvents": [
+  ],
+  "publisher": "az-resource-explorer-vscode",
+  "license": "MIT",
+  "activationEvents": [
     "onView:azure-resource-explorer-for-vscode-tree-view"
   ],
   "main": "./dist/extension.js",
@@ -84,6 +84,11 @@
       {
         "command": "azure-resource-explorer-for-vscode.view-context.copySecret",
         "title": "Copy Secret to Clipboard..."
+      },
+      {
+        "command": "azure-resource-explorer-for-vscode.view-context.applyFilter",
+        "title": "Azure Resource Explorer: Filter by Resource Providers...",
+        "icon": "$(filter)"
       }
     ],
     "menus": {
@@ -122,6 +127,11 @@
           "command": "azure-resource-explorer-for-vscode.view-context.copySecret",
           "when": "azure-resource-explorer-for-vscode-tree-view && viewItem == ResourceWithSecrets",
           "group": "azure-resource-explorer-for-vscode.view-context-secrets-group@1"
+        },
+        {
+          "command": "azure-resource-explorer-for-vscode.view-context.applyFilter",
+          "when": "azure-resource-explorer-for-vscode-tree-view && viewItem == Providers",
+          "group": "inline"
         }
       ],
       "view/title": [
@@ -180,7 +190,7 @@
   },
   "dependencies": {
     "@microsoft/vscode-azext-utils": "^2.1.1",
-    "axios": "^1.6.2"
+    "axios": "^1.6.7"
   },
   "extensionDependencies": [
     "ms-vscode.azure-account"

@@ -46,7 +46,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     const fsProvider = new ArmFsProvider(azureAccount, resourceTypeRepository);
 
-    const treeView = new ResourceExplorerTreeView(azureAccount, resourceTypeRepository, fsProvider, context.asAbsolutePath('resources'), log);
+    const treeView = new ResourceExplorerTreeView(context, azureAccount, resourceTypeRepository, fsProvider, context.asAbsolutePath('resources'), log);
 
     context.subscriptions.push(
 
@@ -67,6 +67,8 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('azure-resource-explorer-for-vscode.view-context.copyToken', () => doAndShowError(() => treeView.copyToken(), 'Failed to copy access token')),
 
         vscode.commands.registerCommand('azure-resource-explorer-for-vscode.view-context.copySecret', (item) => doAndShowError(() => treeView.copySecret(item), 'Failed to copy secret')),
+
+        vscode.commands.registerCommand('azure-resource-explorer-for-vscode.view-context.applyFilter', (item) => doAndShowError(() => treeView.applyFilter(), 'Failed to apply filter')),
     );
 }
 
