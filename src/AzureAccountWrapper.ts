@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 
+import { VSCodeAzureSubscriptionProvider, AzureSubscription } from '@microsoft/vscode-azext-azureauth';
+
 import axios, { AxiosResponse } from 'axios';
 
-// Full typings for this can be found here: https://github.com/microsoft/vscode-azure-account/blob/master/src/azure-account.api.d.ts
-export type AzureSubscription = { session: { credentials2: any }, subscription: { subscriptionId: string, displayName: string } };
 
 export interface TokenResponse {
     tokenType: string;
@@ -22,24 +22,13 @@ const MAX_BATCHES = 100;
 // Wraps Azure Acccount extension
 export class AzureAccountWrapper {
 
-    constructor() {
-
-        // Using Azure Account extension to connect to Azure, get subscriptions etc.
-        const azureAccountExtension = vscode.extensions.getExtension('ms-vscode.azure-account');
-
-        // Typings for azureAccount are here: https://github.com/microsoft/vscode-azure-account/blob/master/src/azure-account.api.d.ts
-        this._account = !!azureAccountExtension ? azureAccountExtension.exports : undefined;
-    }
-
-    get azureAccount(): any { return this._account; }
-
     async getSubscriptions(): Promise<AzureSubscription[]> {
 
         if (!(await this.isSignedIn())) {
             throw new Error(`You need to be signed in to Azure for this. Execute 'Azure: Sign In' command.`);
         }
         
-        return this._account.filters;
+        return this._provider.getSubscriptions(true); //this._account.filters;
     }
 
     // Uses vscode.authentication to get a token with custom scopes
@@ -50,14 +39,14 @@ export class AzureAccountWrapper {
         return authSession.accessToken;
     }
 
-    async isSignedIn(): Promise<boolean> {
+    async signIn(): Promise<boolean> {
 
-        return !!this._account && !!(await this._account.waitForFilters());
+        return this._provider.signIn();
     }
 
-    async subscriptionsAvailable(): Promise<boolean> {
+    async isSignedIn(): Promise<boolean> {
 
-        return !!this._account && !!(await this._account.waitForFilters()) && (this._account.filters.length > 0);
+        return this._provider.isSignedIn();
     }
 
     async queryGraph(resourceType: string): Promise<any[]>{
@@ -166,7 +155,7 @@ export class AzureAccountWrapper {
         }
     }
 
-    private readonly _account: any;
+    private readonly _provider: VSCodeAzureSubscriptionProvider = new VSCodeAzureSubscriptionProvider();
 
     private async getAuthSession(providerId: string, scopes: string[]): Promise<vscode.AuthenticationSession> {
 
@@ -174,12 +163,10 @@ export class AzureAccountWrapper {
         const subscriptions = await this.getSubscriptions();
         if (!!subscriptions?.length) {
 
-            const subscription = subscriptions[0];
-            const tenantId = (subscription.session as any)?.tenantId;
-
+            const tenantId = subscriptions[0].tenantId; //(subscription.session as any)?.tenantId;
             if (!!tenantId) {
                 
-                scopes.push(`VSCODE_TENANT:${(subscription.session as any).tenantId}`);
+                scopes.push(`VSCODE_TENANT:${tenantId}`);
             }
         }
 

@@ -1,5 +1,9 @@
 # Change Log
 
+## Version 1.5
+
+- Decoupled from (soon deprecated) [Azure Account extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.azure-account).
+
 ## Version 1.4
 
 - Implemented filtering by Resource Providers:

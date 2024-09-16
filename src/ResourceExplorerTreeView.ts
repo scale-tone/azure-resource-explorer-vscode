@@ -14,6 +14,7 @@ import { ArmFsProvider } from './ArmFsProvider';
 import { formatError } from './helpers';
 
 export enum ResourceExplorerNodeTypeEnum {
+    SignInToAzure = 0,
     Providers = 1,
     Subscriptions,
     ProviderNamespace,
@@ -29,7 +30,7 @@ export enum ResourceExplorerNodeTypeEnum {
 export type ResourceExplorerTreeItem = vscode.TreeItem & {
 
     nodeType: ResourceExplorerNodeTypeEnum,
-    url: string,
+    url?: string,
     nodeId?: string,
     portalUrl?: string,
     tenantId?: string,
@@ -246,23 +247,38 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
 
                 case undefined: {
 
-                    const selectedNamespaces = this._context.globalState.get(SETTING_NAMES.ProviderFilter) as string[];
+                    if (!(await this._account.isSignedIn())) {
 
-                    result.push({
-                        nodeType: ResourceExplorerNodeTypeEnum.Providers,
-                        label: 'Providers',
-                        contextValue: `${ResourceExplorerNodeTypeEnum[ResourceExplorerNodeTypeEnum.Providers]}`,
-                        description: (selectedNamespaces?.length) ? '(filtered)' : undefined,
-                        url: `${ARM_URL}/providers?api-version=${DEFAULT_API_VERSION}`,
-                        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-                    });
+                        result.push({
+                            nodeType: ResourceExplorerNodeTypeEnum.SignInToAzure,
+                            label: 'Sign in to Azure...',
+                            command: {
+                                title: 'Sign in to Azure...',
+                                command: 'azure-resource-explorer-for-vscode.signInToAzure',
+                                arguments: []
+                            }
+                        });
+                            
+                    } else {
 
-                    result.push({
-                        nodeType: ResourceExplorerNodeTypeEnum.Subscriptions,
-                        label: 'Subscriptions',
-                        url: `${ARM_URL}/subscriptions?api-version=${DEFAULT_API_VERSION}`,
-                        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
-                    });
+                        const selectedNamespaces = this._context.globalState.get(SETTING_NAMES.ProviderFilter) as string[];
+
+                        result.push({
+                            nodeType: ResourceExplorerNodeTypeEnum.Providers,
+                            label: 'Providers',
+                            contextValue: `${ResourceExplorerNodeTypeEnum[ResourceExplorerNodeTypeEnum.Providers]}`,
+                            description: (selectedNamespaces?.length) ? '(filtered)' : undefined,
+                            url: `${ARM_URL}/providers?api-version=${DEFAULT_API_VERSION}`,
+                            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                        });
+    
+                        result.push({
+                            nodeType: ResourceExplorerNodeTypeEnum.Subscriptions,
+                            label: 'Subscriptions',
+                            url: `${ARM_URL}/subscriptions?api-version=${DEFAULT_API_VERSION}`,
+                            collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+                        });
+                    }
 
                     break;
                 }
@@ -354,11 +370,11 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
 
                         result.push({
                             nodeType: ResourceExplorerNodeTypeEnum.Subscription,
-                            nodeId: subscription.subscription.subscriptionId,
-                            label: subscription.subscription.displayName,
-                            url: `${ARM_URL}/subscriptions/${subscription.subscription.subscriptionId}?api-version=${DEFAULT_API_VERSION}`,
-                            portalUrl: (subscription.session as any).environment?.portalUrl,
-                            tenantId: (subscription.session as any).tenantId,
+                            nodeId: subscription.subscriptionId,
+                            label: subscription.name,
+                            url: `${ARM_URL}/subscriptions/${subscription.subscriptionId}?api-version=${DEFAULT_API_VERSION}`,
+                            portalUrl: subscription.environment?.portalUrl,
+                            tenantId: subscription.tenantId,
                             collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
                         });
                     }

@@ -2,7 +2,7 @@
   "name": "azure-resource-explorer-for-vscode",
   "displayName": "Azure Resource Explorer for VsCode",
   "description": "Observe/modify _all_ your Azure resources in VsCode",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -47,6 +47,10 @@
       ]
     },
     "commands": [
+      {
+        "command": "azure-resource-explorer-for-vscode.signInToAzure",
+        "title": "Sign in to Azure..."
+      },
       {
         "command": "azure-resource-explorer-for-vscode.view-context.showAsArm",
         "title": "Show as ARM template"
@@ -189,10 +193,10 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
+    "@azure/identity": "^4.4.1",
+    "@microsoft/vscode-azext-azureauth": "^2.5.0",
     "@microsoft/vscode-azext-utils": "^2.1.1",
     "axios": "^1.6.7"
   },
-  "extensionDependencies": [
-    "ms-vscode.azure-account"
-  ]
+  "extensionDependencies": []
 }

@@ -56,6 +56,11 @@ export function activate(context: vscode.ExtensionContext) {
 
         vscode.window.registerTreeDataProvider('azure-resource-explorer-for-vscode-tree-view', treeView),
 
+        vscode.commands.registerCommand('azure-resource-explorer-for-vscode.signInToAzure', () => doAndShowError(async () => {
+            await azureAccount.signIn();
+            treeView.refresh();
+        }, 'Failed to sign in to Azure')),
+
         vscode.commands.registerCommand('azure-resource-explorer-for-vscode.view-context.showAsArm', (item) => doAndShowError(() => fsProvider.show(item.nodeId), 'Failed to show the code')),
         vscode.commands.registerCommand('azure-resource-explorer-for-vscode.view-context.showAsBicep', (item) => doAndShowError(() => treeView.openAsBicep(item), 'Failed to show the code')),
         vscode.commands.registerCommand('azure-resource-explorer-for-vscode.view-context.applyCurrentJson', (item) => doAndShowError(() => treeView.applyCurrentJson(item), 'Failed to apply current JSON')),
