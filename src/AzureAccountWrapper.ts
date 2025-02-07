@@ -79,8 +79,18 @@ export class AzureAccountWrapper {
     }
 
     async query(path: string, apiVersion: string = DEFAULT_API_VERSION): Promise<any> {
+        interface PathVersion {
+            path: string;
+            version: string;
+        }
+        const customApiVersions: PathVersion[] = vscode.workspace
+            .getConfiguration("azure-resource-explorer-for-vscode")
+            .get("customApiVersions") ?? [];
 
-        let uri = `${ARM_URL}${path}?api-version=${apiVersion}`;
+        const match = customApiVersions.find((x :PathVersion) => x.path === path);
+        const finalVersion = match ? match.version : apiVersion;
+
+        let uri = `${ARM_URL}${path}?api-version=${finalVersion}`;
 
         let result: any = undefined;
         for (let i = 0; i < MAX_BATCHES; i++) {
@@ -90,11 +100,14 @@ export class AzureAccountWrapper {
             try {
 
                 response = await axios.get(uri, { headers: { 'Authorization': `Bearer ${await this.getToken()}` } });
-                
+            
             } catch (err: any) {
 
                 // If this was a nextLink, then just rethrowing
                 if (!!result) {
+                    if (err.response.data.error.code == "NoRegisteredProviderFound") {
+                        console.log("No registered provider found. Check that resource exists for given api-version")
+                    }
                     throw err;
                 }
                 

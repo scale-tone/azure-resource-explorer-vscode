@@ -7,6 +7,8 @@ import { formatError } from './helpers';
 
 export function activate(context: vscode.ExtensionContext) {
 
+    console.log("*********TESTING************", vscode.workspace.getConfiguration("foo", context.extensionUri))
+
     const logChannel = vscode.window.createOutputChannel('Azure Resource Explorer');
 
     const log = (s: string, withEof: boolean, withTimestamp: boolean) => {
