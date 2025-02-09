@@ -1,4 +1,4 @@
-import { workspace, window, ExtensionContext } from 'vscode';
+import { authentication, workspace, window, AuthenticationSession, OutputChannel } from 'vscode';
 
 import { VSCodeAzureSubscriptionProvider, AzureSubscription } from '@microsoft/vscode-azext-azureauth';
 
@@ -21,6 +21,7 @@ const MAX_BATCHES = 100;
 
 // Wraps Azure Acccount extension
 export class AzureAccountWrapper {
+    constructor(private _log: (s: string, withEof: boolean, withTimestamp: boolean) => void) { }
 
     async getSubscriptions(): Promise<AzureSubscription[]> {
 
@@ -78,7 +79,7 @@ export class AzureAccountWrapper {
         return result;
     }
 
-    async query(path: string, apiVersion: string = DEFAULT_API_VERSION, context: ExtensionContext): Promise<any> {
+    async query(path: string, apiVersion: string = DEFAULT_API_VERSION): Promise<any> {
         interface PathVersion {
             path: string;
             version: string;
@@ -89,9 +90,7 @@ export class AzureAccountWrapper {
 
         const customVersion = customApiVersions.find((x :PathVersion) => x.path === path)?.version;
         const finalVersion = customVersion || apiVersion;
-        const logChannel = window.createOutputChannel('Azure Resource Explorer');
-        context.subscriptions.push(logChannel);
-        logChannel.appendLine(`${customVersion ? "Custom " : ""}API Version: ${finalVersion}`);
+        this._log(`${customVersion ? "Custom " : ""}API Version: ${finalVersion}`, true, true);
 
         let uri = `${ARM_URL}${path}?api-version=${finalVersion}`;
 
@@ -170,7 +169,7 @@ export class AzureAccountWrapper {
 
     private readonly _provider: VSCodeAzureSubscriptionProvider = new VSCodeAzureSubscriptionProvider();
 
-    private async getAuthSession(providerId: string, scopes: string[]): Promise<vscode.AuthenticationSession> {
+    private async getAuthSession(providerId: string, scopes: string[]): Promise<AuthenticationSession> {
 
         // Trying to clarify the correct tenantId
         const subscriptions = await this.getSubscriptions();
@@ -184,7 +183,7 @@ export class AzureAccountWrapper {
         }
 
         // First trying silent mode
-        let authSession = await vscode.authentication.getSession(providerId, scopes, { silent: true });
+        let authSession = await authentication.getSession(providerId, scopes, { silent: true });
     
         if (!!authSession) {
             
@@ -192,7 +191,7 @@ export class AzureAccountWrapper {
         }
     
         // Now asking to authenticate, if needed
-        authSession = await vscode.authentication.getSession(providerId, scopes, { createIfNone: true });
+        authSession = await authentication.getSession(providerId, scopes, { createIfNone: true });
     
         return authSession;        
     }

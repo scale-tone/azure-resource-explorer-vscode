@@ -9,8 +9,7 @@ type ArmFileType = { resourceId: string, bytes: Uint8Array, ctime: number, mtime
 // Treats ARM resources as files
 export class ArmFsProvider implements vscode.FileSystemProvider {
 
-    constructor(private _account: AzureAccountWrapper, private _resourceTypeRepository: ResourceTypesRepository, private _context: vscode.ExtensionContext) {
-    }
+    constructor(private _account: AzureAccountWrapper, private _resourceTypeRepository: ResourceTypesRepository) {}
 
     async show(resourceId: string): Promise<void> {
 
@@ -25,7 +24,7 @@ export class ArmFsProvider implements vscode.FileSystemProvider {
         await vscode.window.withProgress(progressOptions, async (progress, token) => {
 
             const apiVersion = await this._resourceTypeRepository.getApiVersion(resourceId);
-            const data = await this._account.query(encodeURI(resourceId), apiVersion, this._context);
+            const data = await this._account.query(encodeURI(resourceId), apiVersion);
             const json = JSON.stringify(data, undefined, 3);
 
             const fileUri = `${ARM_SCHEME}:${resourceId}.json`;

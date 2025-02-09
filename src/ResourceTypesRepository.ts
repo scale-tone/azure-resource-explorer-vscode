@@ -15,7 +15,7 @@ export class ResourceTypesRepository {
 
         if (!this._map) {
 
-            const providers = await this._account.query('/providers', undefined, this._context);
+            const providers = await this._account.query('/providers');
 
             const map = {} as any;
             for (const ns of (providers ?? [])) {

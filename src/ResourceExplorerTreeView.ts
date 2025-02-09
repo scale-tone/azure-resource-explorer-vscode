@@ -50,7 +50,6 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
         private _account: AzureAccountWrapper,
         private _resourceTypeRepository: ResourceTypesRepository,
         private _fsProvider: ArmFsProvider,
-        private _resourcesFolder: string,
         private _log: (s: string, withEof: boolean, withTimestamp: boolean) => void) { }
 
     protected _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined> = new vscode.EventEmitter<vscode.TreeItem | undefined>();
@@ -191,7 +190,7 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
         await vscode.window.withProgress(progressOptions, async (progress, token) => {
 
             const apiVersion = await this._resourceTypeRepository.getApiVersion(resourceId);
-            const data = await this._account.query(encodeURI(resourceId), apiVersion, this._context);
+            const data = await this._account.query(encodeURI(resourceId), apiVersion);
 
             data.apiVersion = apiVersion;
             delete data['id'];
@@ -384,7 +383,7 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
 
                 case ResourceExplorerNodeTypeEnum.Subscription: {
 
-                    const resourceGroups = await this._account.query(`/subscriptions/${parent.nodeId}/resourcegroups`, undefined, this._context);
+                    const resourceGroups = await this._account.query(`/subscriptions/${parent.nodeId}/resourcegroups`);
 
                     for (const resGroup of (resourceGroups ?? [])) {
 
@@ -408,7 +407,7 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
 
                 case ResourceExplorerNodeTypeEnum.ResourceGroup: {
 
-                    const resources = await this._account.query(`${parent.nodeId}/resources`, undefined, this._context);
+                    const resources = await this._account.query(`${parent.nodeId}/resources`);
                     
                     const resourcesByTypes = {} as any;
                     for (const res of (resources ?? [])) {
@@ -509,7 +508,7 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
 
                     try {
 
-                        const resources = await this._account.query(parent.nodeId!, parent.apiVersion, this._context);
+                        const resources = await this._account.query(parent.nodeId!, parent.apiVersion);
 
                         for (const res of resources) {
                         

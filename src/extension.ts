@@ -40,13 +40,13 @@ export function activate(context: vscode.ExtensionContext) {
         return commandChain;
     };
 
-    const azureAccount = new AzureAccountWrapper();
+    const azureAccount = new AzureAccountWrapper(log);
 
     const resourceTypeRepository = new ResourceTypesRepository(azureAccount, context);
 
-    const fsProvider = new ArmFsProvider(azureAccount, resourceTypeRepository, context);
+    const fsProvider = new ArmFsProvider(azureAccount, resourceTypeRepository);
 
-    const treeView = new ResourceExplorerTreeView(context, azureAccount, resourceTypeRepository, fsProvider, context.asAbsolutePath('resources'), log);
+    const treeView = new ResourceExplorerTreeView(context, azureAccount, resourceTypeRepository, fsProvider, log);
 
     context.subscriptions.push(
 
