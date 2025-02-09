@@ -9,7 +9,8 @@ type ArmFileType = { resourceId: string, bytes: Uint8Array, ctime: number, mtime
 // Treats ARM resources as files
 export class ArmFsProvider implements vscode.FileSystemProvider {
 
-    constructor(private _account: AzureAccountWrapper, private _resourceTypeRepository: ResourceTypesRepository) {}
+    constructor(private _account: AzureAccountWrapper, private _resourceTypeRepository: ResourceTypesRepository) {
+    }
 
     async show(resourceId: string): Promise<void> {
 
