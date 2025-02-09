@@ -42,7 +42,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     const azureAccount = new AzureAccountWrapper(log);
 
-    const resourceTypeRepository = new ResourceTypesRepository(azureAccount, context);
+    const resourceTypeRepository = new ResourceTypesRepository(azureAccount);
 
     const fsProvider = new ArmFsProvider(azureAccount, resourceTypeRepository);
 
