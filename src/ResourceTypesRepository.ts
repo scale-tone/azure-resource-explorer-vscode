@@ -1,4 +1,5 @@
 import { AzureAccountWrapper } from "./AzureAccountWrapper";
+
 export type ResourceType = { resourceType: string, locations: string[], apiVersions: string[], defaultApiVersion?: string, capabilities: string };
 export type ProvidersMap = { [namespace: string]: ResourceType[] };
 
