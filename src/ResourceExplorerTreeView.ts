@@ -191,7 +191,7 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
         await vscode.window.withProgress(progressOptions, async (progress, token) => {
 
             const apiVersion = await this._resourceTypeRepository.getApiVersion(resourceId);
-            const data = await this._account.query(encodeURI(resourceId), apiVersion);
+            const data = await this._account.query(encodeURI(resourceId), apiVersion, this._context);
 
             data.apiVersion = apiVersion;
             delete data['id'];
@@ -384,7 +384,7 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
 
                 case ResourceExplorerNodeTypeEnum.Subscription: {
 
-                    const resourceGroups = await this._account.query(`/subscriptions/${parent.nodeId}/resourcegroups`);
+                    const resourceGroups = await this._account.query(`/subscriptions/${parent.nodeId}/resourcegroups`, undefined, this._context);
 
                     for (const resGroup of (resourceGroups ?? [])) {
 
@@ -408,7 +408,7 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
 
                 case ResourceExplorerNodeTypeEnum.ResourceGroup: {
 
-                    const resources = await this._account.query(`${parent.nodeId}/resources`);
+                    const resources = await this._account.query(`${parent.nodeId}/resources`, undefined, this._context);
                     
                     const resourcesByTypes = {} as any;
                     for (const res of (resources ?? [])) {
@@ -509,7 +509,7 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
 
                     try {
 
-                        const resources = await this._account.query(parent.nodeId!, parent.apiVersion);
+                        const resources = await this._account.query(parent.nodeId!, parent.apiVersion, this._context);
 
                         for (const res of resources) {
                         

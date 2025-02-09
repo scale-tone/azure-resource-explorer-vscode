@@ -7,8 +7,6 @@ import { formatError } from './helpers';
 
 export function activate(context: vscode.ExtensionContext) {
 
-    console.log("*********TESTING************", vscode.workspace.getConfiguration("foo", context.extensionUri))
-
     const logChannel = vscode.window.createOutputChannel('Azure Resource Explorer');
 
     const log = (s: string, withEof: boolean, withTimestamp: boolean) => {
@@ -44,9 +42,9 @@ export function activate(context: vscode.ExtensionContext) {
 
     const azureAccount = new AzureAccountWrapper();
 
-    const resourceTypeRepository = new ResourceTypesRepository(azureAccount);
+    const resourceTypeRepository = new ResourceTypesRepository(azureAccount, context);
 
-    const fsProvider = new ArmFsProvider(azureAccount, resourceTypeRepository);
+    const fsProvider = new ArmFsProvider(azureAccount, resourceTypeRepository, context);
 
     const treeView = new ResourceExplorerTreeView(context, azureAccount, resourceTypeRepository, fsProvider, context.asAbsolutePath('resources'), log);
 

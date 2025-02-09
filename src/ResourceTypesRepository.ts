@@ -1,11 +1,11 @@
 import { AzureAccountWrapper } from "./AzureAccountWrapper";
-
+import { ExtensionContext } from "vscode"
 export type ResourceType = { resourceType: string, locations: string[], apiVersions: string[], defaultApiVersion?: string, capabilities: string };
 export type ProvidersMap = { [namespace: string]: ResourceType[] };
 
 export class ResourceTypesRepository {
 
-    constructor(private _account: AzureAccountWrapper) { }
+    constructor(private _account: AzureAccountWrapper, private _context: ExtensionContext) { }
 
     cleanup() {
         this._map = undefined;
@@ -15,7 +15,7 @@ export class ResourceTypesRepository {
 
         if (!this._map) {
 
-            const providers = await this._account.query('/providers');
+            const providers = await this._account.query('/providers', undefined, this._context);
 
             const map = {} as any;
             for (const ns of (providers ?? [])) {

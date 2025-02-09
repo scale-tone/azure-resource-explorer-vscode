@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import { workspace, window, ExtensionContext } from 'vscode';
 
 import { VSCodeAzureSubscriptionProvider, AzureSubscription } from '@microsoft/vscode-azext-azureauth';
 
@@ -78,17 +78,20 @@ export class AzureAccountWrapper {
         return result;
     }
 
-    async query(path: string, apiVersion: string = DEFAULT_API_VERSION): Promise<any> {
+    async query(path: string, apiVersion: string = DEFAULT_API_VERSION, context: ExtensionContext): Promise<any> {
         interface PathVersion {
             path: string;
             version: string;
         }
-        const customApiVersions: PathVersion[] = vscode.workspace
+        const customApiVersions: PathVersion[] = workspace
             .getConfiguration("azure-resource-explorer-for-vscode")
             .get("customApiVersions") ?? [];
 
-        const match = customApiVersions.find((x :PathVersion) => x.path === path);
-        const finalVersion = match ? match.version : apiVersion;
+        const customVersion = customApiVersions.find((x :PathVersion) => x.path === path)?.version;
+        const finalVersion = customVersion || apiVersion;
+        const logChannel = window.createOutputChannel('Azure Resource Explorer');
+        context.subscriptions.push(logChannel);
+        logChannel.appendLine(`${customVersion ? "Custom " : ""}API Version: ${finalVersion}`);
 
         let uri = `${ARM_URL}${path}?api-version=${finalVersion}`;
 
@@ -103,11 +106,8 @@ export class AzureAccountWrapper {
             
             } catch (err: any) {
 
-                // If this was a nextLink, then just rethrowing
-                if (!!result) {
-                    if (err.response.data.error.code == "NoRegisteredProviderFound") {
-                        console.log("No registered provider found. Check that resource exists for given api-version")
-                    }
+                // If this was a nextLink or a custom api-version used, then just rethrowing
+                if (!!result || !!customVersion) {
                     throw err;
                 }
                 
