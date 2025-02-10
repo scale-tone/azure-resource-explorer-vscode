@@ -50,7 +50,6 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
         private _account: AzureAccountWrapper,
         private _resourceTypeRepository: ResourceTypesRepository,
         private _fsProvider: ArmFsProvider,
-        private _resourcesFolder: string,
         private _log: (s: string, withEof: boolean, withTimestamp: boolean) => void) { }
 
     protected _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined> = new vscode.EventEmitter<vscode.TreeItem | undefined>();
