@@ -88,7 +88,7 @@ export class AzureAccountWrapper {
             .getConfiguration("azure-resource-explorer-for-vscode")
             .get("customApiVersions") ?? [];
 
-        const customVersion = customApiVersions.find((x :PathVersion) => path.toLocaleLowerCase().includes(x.pathIncludes.toLocaleLowerCase()))?.version;
+        const customVersion = customApiVersions.find((x : PathVersion) => path.toLocaleLowerCase().includes(x.pathIncludes?.toLocaleLowerCase()))?.version;
         const finalVersion = customVersion || apiVersion;
         this._log(`${customVersion ? "Custom " : ""}API Version: ${finalVersion}`, true, true);
 
