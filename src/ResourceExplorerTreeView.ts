@@ -481,9 +481,9 @@ export class ResourceExplorerTreeView implements vscode.TreeDataProvider<vscode.
 
                     const childResourceTypes = await this._resourceTypeRepository.getChildResourceTypes(parent.nodeId!);
 
-                    for (const childResourceType of childResourceTypes) {
+                    const apiVersion = await this._resourceTypeRepository.getApiVersion(parent.nodeId!);
 
-                        const apiVersion = await this._resourceTypeRepository.getApiVersion(parent.nodeId!);
+                    for (const childResourceType of childResourceTypes) {
                         
                         const node = {
                             nodeType: ResourceExplorerNodeTypeEnum.SubResourceType,

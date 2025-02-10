@@ -2,7 +2,7 @@
   "name": "azure-resource-explorer-for-vscode",
   "displayName": "Azure Resource Explorer for VsCode",
   "description": "Observe/modify _all_ your Azure resources in VsCode",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -173,7 +173,7 @@
                   "scope": "resource",
                   "type": "array",
                   "default": [],
-                  "description": "Allows to override 'api-version' values to be used for specific paths. An array of {'path': '/path/to/resource', 'version': 'api-version-to-use'} objects."
+                  "description": "Allows to override 'api-version' values to be used for specific paths. An array of {'pathIncludes': '/path/to/resource', 'version': 'api-version-to-use'} objects."
               }
             }
           }
