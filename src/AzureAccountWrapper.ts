@@ -81,14 +81,14 @@ export class AzureAccountWrapper {
 
     async query(path: string, apiVersion: string = DEFAULT_API_VERSION): Promise<any> {
         interface PathVersion {
-            path: string;
+            pathIncludes: string;
             version: string;
         }
         const customApiVersions: PathVersion[] = workspace
             .getConfiguration("azure-resource-explorer-for-vscode")
             .get("customApiVersions") ?? [];
 
-        const customVersion = customApiVersions.find((x :PathVersion) => x.path === path)?.version;
+        const customVersion = customApiVersions.find((x :PathVersion) => path.toLocaleLowerCase().includes(x.pathIncludes.toLocaleLowerCase()))?.version;
         const finalVersion = customVersion || apiVersion;
         this._log(`${customVersion ? "Custom " : ""}API Version: ${finalVersion}`, true, true);
 
