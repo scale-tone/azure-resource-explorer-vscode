@@ -1,5 +1,14 @@
 # Change Log
 
+## Version 1.6
+
+- Now you can configure specific api-versions to be used for specific resourceIds and/or paths. Provide an array of `{'pathIncludes': '/path/to/resource', 'version': 'api-version-to-use'}` objects via the `azure-resource-explorer-for-vscode.customApiVersions` config setting:
+
+    <img width="599" alt="image" src="https://github.com/user-attachments/assets/0f49364f-ccc9-4731-a93a-985091ab355e" />
+
+  , and the relevant api-version will be used when making queries containing given subpath.
+  Thanks [@wyattfry](https://github.com/wyattfry) for this contribution!
+
 ## Version 1.5
 
 - Decoupled from (soon deprecated) [Azure Account extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.azure-account).
